@@ -17,24 +17,23 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 app.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
   try {
     const client = await pool.connect();
-    const result = await client.query('SELECT * FROM users WHERE username = $1', [username]);
+    const result = await client.query('SELECT * FROM users WHERE email = $1', [email]);
     const user = result.rows[0];
     client.release();
 
     if (!user || password !== user.password) {
-      return res.status(400).json({ message: 'Username or password incorrect' });
+      return res.status(400).json({ message: 'Email or password incorrect' });
     }
 
-    res.json({ message: 'Login successful', user });
+    res.json({ message: 'Login successful', token: 'dummy-token', user });
   } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error during login:', error.message, error.stack);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-
 
 app.post('/packs', upload.array('images', 10), async (req, res) => {
   const { brand, items } = req.body;
