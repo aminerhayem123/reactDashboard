@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   CButton,
   CCard,
@@ -12,41 +12,31 @@ import {
   CInputGroup,
   CInputGroupText,
   CRow,
-} from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser } from '@coreui/icons'
+} from '@coreui/react';
+import CIcon from '@coreui/icons-react';
+import { cilLockLocked, cilUser } from '@coreui/icons';
 
-const Login = ({ onLogin }) => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const navigate = useNavigate()
+const Login = ({ handleLogin }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault()
-    setError('') // Clear previous errors
-
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Login failed')
+      const error = await handleLogin(email, password);
+      if (error) {
+        setError(error);
+      } else {
+        setError(''); // Clear previous errors
+        navigate('/dashboard'); // Redirect to dashboard on successful login
       }
-
-      const data = await response.json()
-      onLogin(data.token)
-      navigate('/dashboard') // Redirect to dashboard
     } catch (error) {
-      setError(error.message)
+      console.error('Login error:', error);
+      setError('Server error');
     }
-  }
+  };
 
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
@@ -56,7 +46,7 @@ const Login = ({ onLogin }) => {
             <CCardGroup>
               <CCard className="p-4">
                 <CCardBody>
-                  <CForm onSubmit={handleLogin}>
+                  <CForm onSubmit={handleSubmit}>
                     <h1>Login</h1>
                     <p className="text-body-secondary">Sign In to your account</p>
                     {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
@@ -119,7 +109,7 @@ const Login = ({ onLogin }) => {
         </CRow>
       </CContainer>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
