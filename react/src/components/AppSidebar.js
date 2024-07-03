@@ -26,7 +26,7 @@ const AppSidebar = () => {
 
   // Filtered navigation items for Dashboard, Pages, and Base Tables
   const filteredNavItems = navigation.filter(item => (
-    item.name === 'Dashboard' || item.name === 'Pages' || item.name === 'Base Tables'
+    item.name === 'Dashboard' || item.name === 'Pages' 
   ));
 
   return (

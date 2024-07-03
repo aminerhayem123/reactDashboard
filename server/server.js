@@ -71,9 +71,10 @@ app.post('/packs', upload.array('images', 10), async (req, res) => {
     res.json({ message: 'Pack and items added successfully', packId });
   } catch (error) {
     console.error('Error during pack creation:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
 
 app.get('/packs', async (req, res) => {
   try {

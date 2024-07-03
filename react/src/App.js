@@ -3,7 +3,8 @@ import { HashRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { CSpinner, useColorModes } from '@coreui/react';
 import './scss/style.scss';
-
+import Packs from './views/pages/packs/packs';
+import Items from './views/pages/items/items';
 // Containers
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'));
 
@@ -11,6 +12,7 @@ const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'));
 const Login = React.lazy(() => import('./views/pages/login/Login'));
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404'));
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'));
+const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard')); 
 
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme');
