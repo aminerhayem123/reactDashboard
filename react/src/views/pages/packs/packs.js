@@ -39,6 +39,7 @@ const Packs = () => {
     packId: '',
     name: ''
   });
+  const [selectedImageIds, setSelectedImageIds] = useState([]); // State to hold IDs of selected images to delete
 
   useEffect(() => {
     fetchPacks();
@@ -144,9 +145,48 @@ const Packs = () => {
   const handleCloseImageModal = () => {
     setShowImageModal(false);
     setModalImages([]);
+    setSelectedImageIds([]); // Clear selected image IDs on modal close
+  };
+
+  const handleImageSelect = (index) => {
+    setSelectedImageIds((prevSelectedIds) => {
+      if (prevSelectedIds.includes(modalImages[index].id)) {
+        return prevSelectedIds.filter((id) => id !== modalImages[index].id);
+      } else {
+        return [...prevSelectedIds, modalImages[index].id];
+      }
+    });
+  };
+
+  const handleDeleteSelectedImages = async () => {
+    try {
+      await axios.delete(`http://localhost:5000/images/delete`, {
+        data: { imageIds: selectedImageIds }, // Pass array of selected image IDs to delete
+      });
+
+      // Remove selected images from modalImages state
+      const updatedImages = modalImages.filter((image) => !selectedImageIds.includes(image.id));
+      setModalImages(updatedImages);
+
+      setSelectedImageIds([]); // Clear selected image IDs after deletion
+    } catch (error) {
+      console.error('Error deleting images:', error);
+    }
   };
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop: handleDrop });
+
+  // Function to render the delete button
+  const renderDeleteButton = () => {
+    if (selectedImageIds.length > 0) {
+      return (
+        <Button variant="danger" onClick={handleDeleteSelectedImages}>
+          Delete Selected Images
+        </Button>
+      );
+    }
+    return null;
+  };
 
   return (
     <>
@@ -222,12 +262,18 @@ const Packs = () => {
           <Row>
             {modalImages.map((image, idx) => (
               <Col md={4} key={idx} className="mb-3">
-                <Image src={`data:image/jpeg;base64,${image.data}`} thumbnail />
+                <Image
+                  src={`data:image/jpeg;base64,${image.data}`}
+                  thumbnail
+                  onClick={() => handleImageSelect(idx)} // Select image on click
+                  className={selectedImageIds.includes(image.id) ? 'border border-primary rounded' : 'rounded'}
+                />
               </Col>
             ))}
           </Row>
         </Modal.Body>
         <Modal.Footer>
+          {renderDeleteButton()}
           <Button variant="secondary" onClick={handleCloseImageModal}>
             Close
           </Button>
@@ -245,8 +291,20 @@ const Packs = () => {
               <Form.Label>Brand</Form.Label>
               <Form.Control
                 type="text"
+                placeholder="Enter brand"
                 name="brand"
                 value={formData.brand}
+                onChange={handleFormChange}
+                required
+              />
+            </Form.Group>
+            <Form.Group controlId="formNumberOfItems">
+              <Form.Label>Number of Items</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Enter number of items"
+                name="numberOfItems"
+                value={formData.numberOfItems}
                 onChange={handleFormChange}
                 required
               />
@@ -254,26 +312,25 @@ const Packs = () => {
             <Form.Group controlId="formItems">
               <Form.Label>Items</Form.Label>
               {formData.items.map((item, index) => (
-                <Form.Control
-                  key={index}
-                  type="text"
-                  value={item}
-                  onChange={(e) => handleItemChange(index, e.target.value)}
-                  required
-                />
+                <div key={index} className="mb-2">
+                  <Form.Control
+                    type="text"
+                    placeholder={`Item ${index + 1}`}
+                    value={item}
+                    onChange={(e) => handleItemChange(index, e.target.value)}
+                    required
+                  />
+                </div>
               ))}
-              <Button variant="link" onClick={handleAddItem}>Add Item</Button>
+              <Button variant="outline-primary" onClick={handleAddItem}>
+                Add Item
+              </Button>
             </Form.Group>
             <Form.Group controlId="formImages">
               <Form.Label>Images</Form.Label>
               <div {...getRootProps({ className: 'dropzone' })}>
                 <input {...getInputProps()} />
                 <p>Drag 'n' drop some files here, or click to select files</p>
-              </div>
-              <div>
-                {formData.images.map((file, idx) => (
-                  <div key={idx}>{file.name}</div>
-                ))}
               </div>
             </Form.Group>
             <Button variant="primary" type="submit">
@@ -294,13 +351,14 @@ const Packs = () => {
               <Form.Label>Item Name</Form.Label>
               <Form.Control
                 type="text"
+                placeholder="Enter item name"
                 value={newItemData.name}
                 onChange={(e) => setNewItemData({ ...newItemData, name: e.target.value })}
                 required
               />
             </Form.Group>
             <Button variant="primary" type="submit">
-              Add
+              Add Item
             </Button>
           </Form>
         </Modal.Body>
