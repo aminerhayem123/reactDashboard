@@ -1,160 +1,96 @@
-import React from 'react'
-import classNames from 'classnames'
+import React, { useState, useEffect } from 'react';
 import {
   CCard,
   CCardBody,
   CCardHeader,
-  CCol,
-  CProgress,
-  CRow,
   CTable,
   CTableBody,
   CTableDataCell,
   CTableHead,
   CTableHeaderCell,
   CTableRow,
-} from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import {
-  cilUser,
-  cilUserFemale,
-} from '@coreui/icons'
+  CButton,
+} from '@coreui/react';
+import CIcon from '@coreui/icons-react';
+import { cilUser } from '@coreui/icons';
 
-import avatar1 from 'src/assets/images/avatars/1.jpg'
-import avatar2 from 'src/assets/images/avatars/2.jpg'
-import avatar3 from 'src/assets/images/avatars/3.jpg'
-import avatar4 from 'src/assets/images/avatars/4.jpg'
-import avatar5 from 'src/assets/images/avatars/5.jpg'
-import avatar6 from 'src/assets/images/avatars/6.jpg'
+import avatar from 'src/assets/images/avatars/1.jpg';
 
 const Items = () => {
+  const [items, setItems] = useState([]);
 
-  const tableExample = [
-    {
-      avatar: { src: avatar1 },
-      user: {
-        name: 'Yiorgos Avraamu',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'USA' },
-      usage: {
-        value: 50,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-      },
-      activity: '10 sec ago',
-    },
-    {
-      avatar: { src: avatar2 },
-      user: {
-        name: 'Avram Tarasios',
-        new: false,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'Brazil' },
-      usage: {
-        value: 22,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-      },
-      activity: '5 minutes ago',
-    },
-    {
-      avatar: { src: avatar3 },
-      user: { name: 'Quintin Ed', new: true, registered: 'Jan 1, 2023' },
-      country: { name: 'India' },
-      usage: {
-        value: 74,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-      },
-      activity: '1 hour ago',
-    },
-    {
-      avatar: { src: avatar4 },
-      user: { name: 'Enéas Kwadwo', new: true, registered: 'Jan 1, 2023' },
-      country: { name: 'France' },
-      usage: {
-        value: 98,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-      },
-      activity: 'Last month',
-    },
-    {
-      avatar: { src: avatar5 },
-      user: {
-        name: 'Agapetus Tadeáš',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'Spain' },
-      usage: {
-        value: 22,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-      },
-      activity: 'Last week',
-    },
-    {
-      avatar: { src: avatar6 },
-      user: {
-        name: 'Friderik Dávid',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'Poland' },
-      usage: {
-        value: 43,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-      },
-      activity: 'Last week',
-    },
-  ]
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const fetchItems = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/items');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      const itemsWithAvatars = data.map(item => ({
+        ...item,
+        avatar,
+      }));
+      setItems(itemsWithAvatars);
+    } catch (error) {
+      console.error('Error fetching items:', error);
+    }
+  };
+
+  const deleteItem = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/items/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      setItems(items.filter(item => item.id !== id));
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
+  };
 
   return (
-    <>
-      <CCard className="mb-4">
-        <CCardHeader>Items</CCardHeader>
-        <CCardBody>
-          <CTable align="middle" className="mb-0 border" hover responsive>
-            <CTableHead className="text-nowrap">
-              <CTableRow>
-                <CTableHeaderCell className="bg-body-tertiary text-center">
-                  <CIcon icon={cilUser} />
-                </CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary">User</CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary text-center">
-                  Country
-                </CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary">Usage</CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary">Activity</CTableHeaderCell>
+    <CCard className="mb-4">
+      <CCardHeader>Items</CCardHeader>
+      <CCardBody>
+        <CTable align="middle" className="mb-0 border" hover responsive>
+          <CTableHead className="text-nowrap">
+            <CTableRow>
+              <CTableHeaderCell className="bg-body-tertiary text-center">
+                <CIcon icon={cilUser} />
+              </CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">ID</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Name</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Pack ID</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Actions</CTableHeaderCell>
+            </CTableRow>
+          </CTableHead>
+          <CTableBody>
+            {items.map((item) => (
+              <CTableRow key={item.id}>
+                <CTableDataCell className="text-center">
+                  <img src={item.avatar} className="rounded-circle" alt="avatar" width="48" height="48" />
+                </CTableDataCell>
+                <CTableDataCell>{item.id}</CTableDataCell>
+                <CTableDataCell>{item.name}</CTableDataCell>
+                <CTableDataCell>{item.pack_id}</CTableDataCell>
+                <CTableDataCell>
+                  <CButton color="danger" onClick={() => deleteItem(item.id)}>
+                    Delete
+                  </CButton>
+                </CTableDataCell>
               </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {tableExample.map((item, index) => (
-                <CTableRow key={index}>
-                  <CTableDataCell className="text-center">
-                    <img src={item.avatar.src} className="rounded-circle" alt="avatar" width="48" height="48" />
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    <div>{item.user.name}</div>
-                    <div className="small text-muted">Registered: {item.user.registered}</div>
-                  </CTableDataCell>
-                  <CTableDataCell className="text-center">
-                    {item.country.name}
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    <div>{item.usage.value}%</div>
-                    <div className="small text-muted">{item.usage.period}</div>
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    {item.activity}
-                  </CTableDataCell>
-                </CTableRow>
-              ))}
-            </CTableBody>
-          </CTable>
-        </CCardBody>
-      </CCard>
-    </>
-  )
-}
+            ))}
+          </CTableBody>
+        </CTable>
+      </CCardBody>
+    </CCard>
+  );
+};
 
-export default Items
+export default Items;
