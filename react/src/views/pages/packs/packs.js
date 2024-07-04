@@ -163,16 +163,16 @@ const Packs = () => {
       await axios.delete(`http://localhost:5000/images/delete`, {
         data: { imageIds: selectedImageIds }, // Pass array of selected image IDs to delete
       });
-
+  
       // Remove selected images from modalImages state
       const updatedImages = modalImages.filter((image) => !selectedImageIds.includes(image.id));
       setModalImages(updatedImages);
-
+  
       setSelectedImageIds([]); // Clear selected image IDs after deletion
     } catch (error) {
       console.error('Error deleting images:', error);
     }
-  };
+  };  
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop: handleDrop });
 
