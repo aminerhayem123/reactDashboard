@@ -14,7 +14,9 @@ import {
   Button,
   Modal,
   Form,
-  Image
+  Image,
+  Row,
+  Col,
 } from 'react-bootstrap';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
@@ -25,6 +27,8 @@ const Packs = () => {
   const [packs, setPacks] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showItemForm, setShowItemForm] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false); // State for image modal
+  const [modalImages, setModalImages] = useState([]); // State to hold images for modal display
   const [formData, setFormData] = useState({
     brand: '',
     numberOfItems: 1,
@@ -132,6 +136,16 @@ const Packs = () => {
     }
   };
 
+  const handleShowImages = (images) => {
+    setModalImages(images);
+    setShowImageModal(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setShowImageModal(false);
+    setModalImages([]);
+  };
+
   const { getRootProps, getInputProps } = useDropzone({ onDrop: handleDrop });
 
   return (
@@ -180,9 +194,12 @@ const Packs = () => {
                     ))}
                   </CTableDataCell>
                   <CTableDataCell>
-                    {pack.images.map((image, idx) => (
-                      <Image key={idx} src={`data:image/jpeg;base64,${image.data}`} width="48" height="48" />
-                    ))}
+                    <Button
+                      variant="primary"
+                      onClick={() => handleShowImages(pack.images)}
+                    >
+                      View Images
+                    </Button>
                   </CTableDataCell>
                   <CTableDataCell>
                     <Button variant="secondary" onClick={() => { setNewItemData({ packId: pack.id, name: '' }); setShowItemForm(true); }}>
@@ -195,6 +212,29 @@ const Packs = () => {
           </CTable>
         </CCardBody>
       </CCard>
+
+      {/* Modal for Images */}
+      <Modal show={showImageModal} onHide={handleCloseImageModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Images</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Row>
+            {modalImages.map((image, idx) => (
+              <Col md={4} key={idx} className="mb-3">
+                <Image src={`data:image/jpeg;base64,${image.data}`} thumbnail />
+              </Col>
+            ))}
+          </Row>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseImageModal}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Add Pack Modal */}
       <Modal show={showForm} onHide={() => setShowForm(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Add Pack</Modal.Title>
@@ -242,6 +282,8 @@ const Packs = () => {
           </Form>
         </Modal.Body>
       </Modal>
+
+      {/* Add Item Modal */}
       <Modal show={showItemForm} onHide={() => setShowItemForm(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Add Item</Modal.Title>
@@ -252,14 +294,13 @@ const Packs = () => {
               <Form.Label>Item Name</Form.Label>
               <Form.Control
                 type="text"
-                name="name"
                 value={newItemData.name}
                 onChange={(e) => setNewItemData({ ...newItemData, name: e.target.value })}
                 required
               />
             </Form.Group>
             <Button variant="primary" type="submit">
-              Add Item
+              Add
             </Button>
           </Form>
         </Modal.Body>
