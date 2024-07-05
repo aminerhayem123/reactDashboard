@@ -33,7 +33,8 @@ const Packs = () => {
     brand: '',
     numberOfItems: 1,
     items: [''],
-    images: []
+    images: [],
+    price: ''
   });
   const [newItemData, setNewItemData] = useState({
     packId: '',
@@ -87,16 +88,17 @@ const Packs = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     const data = new FormData();
     data.append('brand', formData.brand);
+    data.append('price', formData.price); // Add price to form data
     formData.items.forEach((item, index) => {
       data.append(`items`, item);
     });
     formData.images.forEach((image, index) => {
       data.append(`images`, image);
     });
-
+  
     try {
       await axios.post('http://localhost:5000/packs', data, {
         headers: {
@@ -109,12 +111,14 @@ const Packs = () => {
         brand: '',
         numberOfItems: 1,
         items: [''],
-        images: []
+        images: [],
+        price: '' // Reset price
       });
     } catch (error) {
       console.error('Error creating pack:', error);
     }
   };
+  
 
   const handleAddNewItem = async (e) => {
     e.preventDefault();
@@ -197,58 +201,60 @@ const Packs = () => {
         <CCardHeader>Packs</CCardHeader>
         <CCardBody>
           <CTable align="middle" className="mb-0 border" hover responsive>
-            <CTableHead className="text-nowrap">
-              <CTableRow>
-                <CTableHeaderCell className="bg-body-tertiary text-center">
-                  User
-                </CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary">Brand</CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary text-center">Items</CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary">Images</CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary">Action</CTableHeaderCell>
+          <CTableHead className="text-nowrap">
+            <CTableRow>
+              <CTableHeaderCell className="bg-body-tertiary text-center">User</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Brand</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Items</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Images</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Price</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Created Date</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Action</CTableHeaderCell>
+            </CTableRow>
+          </CTableHead>
+          <CTableBody>
+            {packs.map((pack, index) => (
+              <CTableRow key={index}>
+                <CTableDataCell className="text-center">
+                  <img src={pack.avatar?.src || avatar1} className="rounded-circle" alt="avatar" width="48" height="48" />
+                </CTableDataCell>
+                <CTableDataCell>
+                  <div>{pack.brand}</div>
+                  <div className="small text-muted">Items: {pack.items.length}</div>
+                </CTableDataCell>
+                <CTableDataCell className="text-center">
+                  {pack.items.map((item, idx) => (
+                    <div key={idx}>
+                      {item.name}
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() => handleDeleteItem(item.id)}
+                        className="ms-2"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  ))}
+                </CTableDataCell>
+                <CTableDataCell>
+                  <Button
+                    variant="primary"
+                    onClick={() => handleShowImages(pack.images)}
+                  >
+                    View Images
+                  </Button>
+                </CTableDataCell>
+                <CTableDataCell>{pack.price}</CTableDataCell> {/* Display Price */}
+                <CTableDataCell>{new Date(pack.created_date).toLocaleString()}</CTableDataCell> {/* Display Created Date */}
+                <CTableDataCell>
+                  <Button variant="secondary" onClick={() => { setNewItemData({ packId: pack.id, name: '' }); setShowItemForm(true); }}>
+                    Add Item
+                  </Button>
+                </CTableDataCell>
               </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {packs.map((pack, index) => (
-                <CTableRow key={index}>
-                  <CTableDataCell className="text-center">
-                    <img src={pack.avatar?.src || avatar1} className="rounded-circle" alt="avatar" width="48" height="48" />
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    <div>{pack.brand}</div>
-                    <div className="small text-muted">Items: {pack.items.length}</div>
-                  </CTableDataCell>
-                  <CTableDataCell className="text-center">
-                    {pack.items.map((item, idx) => (
-                      <div key={idx}>
-                        {item.name}
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          onClick={() => handleDeleteItem(item.id)}
-                          className="ms-2"
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    ))}
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    <Button
-                      variant="primary"
-                      onClick={() => handleShowImages(pack.images)}
-                    >
-                      View Images
-                    </Button>
-                  </CTableDataCell>
-                  <CTableDataCell>
-                    <Button variant="secondary" onClick={() => { setNewItemData({ packId: pack.id, name: '' }); setShowItemForm(true); }}>
-                      Add Item
-                    </Button>
-                  </CTableDataCell>
-                </CTableRow>
-              ))}
-            </CTableBody>
+            ))}
+          </CTableBody>
           </CTable>
         </CCardBody>
       </CCard>
@@ -298,6 +304,17 @@ const Packs = () => {
                 required
               />
             </Form.Group>
+            <Form.Group controlId="formPrice">
+            <Form.Label>Price</Form.Label>
+            <Form.Control
+              type="number"
+              placeholder="Enter price"
+              name="price"
+              value={formData.price}
+              onChange={handleFormChange}
+              required
+            />
+          </Form.Group>
             <Form.Group controlId="formNumberOfItems">
               <Form.Label>Number of Items</Form.Label>
               <Form.Control

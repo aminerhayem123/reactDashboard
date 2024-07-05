@@ -36,9 +36,9 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/packs', upload.array('images', 10), async (req, res) => {
-  const { brand, items } = req.body;
-  if (!brand || !items) {
-    return res.status(400).json({ message: 'Brand and items are required' });
+  const { brand, items, price } = req.body;
+  if (!brand || !items || !price) {
+    return res.status(400).json({ message: 'Brand, items, and price are required' });
   }
 
   const images = req.files;
@@ -50,8 +50,11 @@ app.post('/packs', upload.array('images', 10), async (req, res) => {
     const randomNumber = Math.floor(10000 + Math.random() * 90000);
     const packId = `${randomLetters}${randomNumber}`;
 
-    const result = await client.query('INSERT INTO packs (id, brand) VALUES ($1, $2) RETURNING id', [packId, brand]);
-    const insertedPackId = result.rows[0].id;
+    const result = await client.query(
+      'INSERT INTO packs (id, brand, price) VALUES ($1, $2, $3) RETURNING id, created_date',
+      [packId, brand, price]
+    );
+    const { id: insertedPackId, created_date } = result.rows[0];
 
     const itemQueries = items.map((itemName, index) => {
       const itemId = `${packId}${String(index + 1).padStart(5, '0')}`;
@@ -68,7 +71,7 @@ app.post('/packs', upload.array('images', 10), async (req, res) => {
 
     client.release();
 
-    res.json({ message: 'Pack and items added successfully', packId });
+    res.json({ message: 'Pack and items added successfully', packId, created_date });
   } catch (error) {
     console.error('Error during pack creation:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -106,7 +109,6 @@ app.get('/packs', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 app.post('/packs/:id/items', async (req, res) => {
   const { id } = req.params;
