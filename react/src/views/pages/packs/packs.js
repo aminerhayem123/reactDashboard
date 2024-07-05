@@ -209,7 +209,7 @@ const Packs = () => {
               <CTableHeaderCell className="bg-body-tertiary">Images</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Price</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Created Date</CTableHeaderCell>
-              <CTableHeaderCell className="bg-body-tertiary">Action</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Actions</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
           <CTableBody>
