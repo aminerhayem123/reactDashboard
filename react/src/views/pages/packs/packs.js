@@ -366,9 +366,16 @@ const Packs = () => {
             </Form.Group>
             <Form.Group controlId="formImages">
               <Form.Label>Images</Form.Label>
-              <div {...getRootProps({ className: 'dropzone' })}>
+              <div style={{ border: '2px dashed #ccc', padding: '20px', textAlign: 'center', cursor: 'pointer', marginTop: '10px' }} {...getRootProps({ className: 'dropzone' })}>
                 <input {...getInputProps()} />
                 <p>Import Pictures</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: '10px' }}>
+                  {formData.images.map((file, index) => (
+                    <div key={index} style={{ width: '100px', height: '100px', marginRight: '10px', marginBottom: '10px', position: 'relative' }}>
+                      <img src={URL.createObjectURL(file)} alt={`Preview-${index}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '5px' }} />
+                    </div>
+                  ))}
+                </div>
               </div>
             </Form.Group>
             <Button variant="primary" type="submit">
