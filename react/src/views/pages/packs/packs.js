@@ -24,6 +24,15 @@ import axios from 'axios';
 import avatar1 from 'src/assets/images/avatars/1.jpg';
 
 const Packs = () => {
+  const formatDate = (date) => {
+    const options = {
+      year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: 'numeric', second: 'numeric',
+      hour12: false // Use 24-hour format
+    };
+    return date.toLocaleString(undefined, options);
+  };
+  
   const [packs, setPacks] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showItemForm, setShowItemForm] = useState(false);
@@ -258,7 +267,7 @@ const Packs = () => {
                   </Button>
                 </CTableDataCell>
                 <CTableDataCell>{pack.price}</CTableDataCell> {/* Display Price */}
-                <CTableDataCell>{new Date(pack.created_date).toLocaleString()}</CTableDataCell> {/* Display Created Date */}
+                <CTableDataCell>{formatDate(new Date(pack.created_date))}</CTableDataCell>{/* Display Created Date */}
                 <CTableDataCell>
                   <Button variant="secondary" onClick={() => { setNewItemData({ packId: pack.id, name: '' }); setShowItemForm(true); }}>
                     Add Item
@@ -359,7 +368,7 @@ const Packs = () => {
               <Form.Label>Images</Form.Label>
               <div {...getRootProps({ className: 'dropzone' })}>
                 <input {...getInputProps()} />
-                <p>Drag 'n' drop some files here, or click to select files</p>
+                <p>Import Pictures</p>
               </div>
             </Form.Group>
             <Button variant="primary" type="submit">
