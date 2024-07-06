@@ -52,8 +52,8 @@ app.post('/packs', upload.array('images', 10), async (req, res) => {
 
     const result = await client.query(
       'INSERT INTO packs (id, brand, price) VALUES ($1, $2, $3) RETURNING id, created_date',
-      [packId, brand, price]
-    );
+      [packId, brand, parseFloat(price)]
+    );    
     const { id: insertedPackId, created_date } = result.rows[0];
 
     const itemQueries = items.map((itemName, index) => {
@@ -110,6 +110,7 @@ app.get('/packs', async (req, res) => {
   }
 });
 
+// Endpoint to add a new item to a pack
 app.post('/packs/:id/items', async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
@@ -122,20 +123,34 @@ app.post('/packs/:id/items', async (req, res) => {
     const itemCountResult = await client.query(itemCountQuery, [id]);
     const itemCount = parseInt(itemCountResult.rows[0].count);
 
-    // Generate the item ID using the pack ID and the current item count
-    const itemId = `${id}${String(itemCount + 1).padStart(5, '0')}`;
+    // Generate the item ID using the pack ID and the next available number
+    let newItemId;
+    let foundNewId = false;
+    let i = 1;
+    do {
+      newItemId = `${id}${String(itemCount + i).padStart(5, '0')}`;
+      const checkItemIdQuery = 'SELECT id FROM items WHERE id = $1';
+      const checkItemIdResult = await client.query(checkItemIdQuery, [newItemId]);
+      if (checkItemIdResult.rows.length === 0) {
+        foundNewId = true;
+      }
+      i++;
+    } while (!foundNewId);
 
+    // Insert the item into the database
     const insertItemQuery = 'INSERT INTO items (id, name, pack_id) VALUES ($1, $2, $3) RETURNING *';
-    const result = await client.query(insertItemQuery, [itemId, name, id]);
+    const result = await client.query(insertItemQuery, [newItemId, name, id]);
     const newItem = result.rows[0];
+
     client.release();
 
     res.status(201).json(newItem);
   } catch (err) {
-    console.error(err);
+    console.error('Error adding item:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 app.delete('/items/:id', async (req, res) => {
@@ -192,7 +207,7 @@ app.delete('/items/:id', async (req, res) => {
   try {
     const client = await pool.connect();
 
-    // Get pack_id for cascading deletion
+    // Get pack_id and position of the item being deleted
     const packIdQuery = 'SELECT pack_id FROM items WHERE id = $1';
     const packIdResult = await client.query(packIdQuery, [id]);
     const packId = packIdResult.rows[0].pack_id;
@@ -200,26 +215,26 @@ app.delete('/items/:id', async (req, res) => {
     // Delete the item
     await client.query('DELETE FROM items WHERE id = $1', [id]);
 
-    // Check if the pack has any remaining items
-    const itemCountQuery = 'SELECT COUNT(*) FROM items WHERE pack_id = $1';
-    const itemCountResult = await client.query(itemCountQuery, [packId]);
-    const remainingItemCount = parseInt(itemCountResult.rows[0].count);
+    // Fetch all remaining items in the pack and update their IDs sequentially
+    const fetchItemsQuery = 'SELECT id FROM items WHERE pack_id = $1 ORDER BY id';
+    const fetchItemsResult = await client.query(fetchItemsQuery, [packId]);
+    const items = fetchItemsResult.rows;
 
-    // If no items remain in the pack, delete the pack
-    if (remainingItemCount === 0) {
-      await client.query('DELETE FROM packs WHERE id = $1', [packId]);
-      
-      // Also delete associated images due to ON DELETE CASCADE
-      await client.query('DELETE FROM images WHERE pack_id = $1', [packId]);
+    // Update items in a batch to ensure sequential IDs
+    for (let i = 0; i < items.length; i++) {
+      const newId = `${packId}${String(i + 1).padStart(5, '0')}`;
+      await client.query('UPDATE items SET id = $1 WHERE id = $2', [newId, items[i].id]);
     }
 
     client.release();
-    res.json({ message: 'Item deleted successfully' });
+
+    res.json({ message: 'Item deleted successfully', remainingItems: items.length });
   } catch (error) {
     console.error('Error deleting item:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 app.delete('/images/delete', async (req, res) => {
   const { imageIds } = req.body;

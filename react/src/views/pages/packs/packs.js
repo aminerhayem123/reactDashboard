@@ -123,14 +123,26 @@ const Packs = () => {
   const handleAddNewItem = async (e) => {
     e.preventDefault();
     try {
+      // Ensure newItemData.packId is set correctly before proceeding
+      if (!newItemData.packId) {
+        console.error('Pack ID is missing.');
+        return;
+      }
+  
+      // Send the POST request to add a new item
       await axios.post(`http://localhost:5000/packs/${newItemData.packId}/items`, { name: newItemData.name });
+      
+      // Refresh the packs list after adding the new item
       fetchPacks();
+      
+      // Reset the form and modal state
       setShowItemForm(false);
       setNewItemData({ packId: '', name: '' });
     } catch (error) {
       console.error('Error adding new item:', error);
     }
   };
+  
 
   const handleDeleteItem = async (itemId) => {
     try {
