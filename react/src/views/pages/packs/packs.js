@@ -20,7 +20,7 @@ import {
 } from 'react-bootstrap';
 import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
-
+import { Trash } from 'react-bootstrap-icons';
 import avatar1 from 'src/assets/images/avatars/1.jpg';
 
 const Packs = () => {
@@ -350,14 +350,29 @@ const Packs = () => {
             <Form.Group controlId="formItems">
               <Form.Label>Items</Form.Label>
               {formData.items.map((item, index) => (
-                <div key={index} className="mb-2">
+                <div key={index} className="mb-2 d-flex align-items-center">
                   <Form.Control
                     type="text"
                     placeholder={`Item ${index + 1}`}
                     value={item}
                     onChange={(e) => handleItemChange(index, e.target.value)}
                     required
+                    style={{ marginRight: '10px' }}
                   />
+                  <Button
+                    variant="outline-danger"
+                    onClick={() => {
+                      const newItems = [...formData.items];
+                      newItems.splice(index, 1);
+                      setFormData({
+                        ...formData,
+                        items: newItems,
+                      });
+                    }}
+                    className="align-self-start"
+                  >
+                    <Trash />
+                  </Button>
                 </div>
               ))}
               <Button variant="outline-primary" onClick={handleAddItem}>
