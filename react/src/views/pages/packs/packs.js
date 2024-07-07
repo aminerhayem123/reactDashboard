@@ -221,7 +221,7 @@ const Packs = () => {
       <CCard className="mb-4">
         <CCardHeader>Packs</CCardHeader>
         <CCardBody>
-          <CTable align="middle" className="mb-0 border" hover responsive>
+        <CTable align="middle" className="mb-0 border" hover responsive>
           <CTableHead className="text-nowrap">
             <CTableRow>
               <CTableHeaderCell className="bg-body-tertiary text-center">User</CTableHeaderCell>
@@ -237,12 +237,9 @@ const Packs = () => {
             {packs.map((pack, index) => (
               <CTableRow key={index}>
                 <CTableDataCell className="text-center">
-                  <img src={pack.avatar?.src || avatar1} className="rounded-circle" alt="avatar" width="48" height="48" />
+                  <img src={pack.avatar?.src || avatar1} className="rounded-circle" alt="avatar" width="40" height="40" />
                 </CTableDataCell>
-                <CTableDataCell>
-                  <div>{pack.brand}</div>
-                  <div className="small text-muted">Items: {pack.items.length}</div>
-                </CTableDataCell>
+                <CTableDataCell>{pack.brand}</CTableDataCell>
                 <CTableDataCell className="text-center">
                   {pack.items.map((item, idx) => (
                     <div key={idx}>
@@ -251,7 +248,7 @@ const Packs = () => {
                         variant="outline-danger"
                         size="sm"
                         onClick={() => handleDeleteItem(item.id)}
-                        className="ms-2"
+                        className="ms-4"
                       >
                         Delete
                       </Button>
@@ -266,17 +263,23 @@ const Packs = () => {
                     View Images
                   </Button>
                 </CTableDataCell>
-                <CTableDataCell>{pack.price}</CTableDataCell> {/* Display Price */}
-                <CTableDataCell>{formatDate(new Date(pack.created_date))}</CTableDataCell>{/* Display Created Date */}
+                <CTableDataCell>{pack.price}</CTableDataCell>
+                <CTableDataCell>{formatDate(new Date(pack.created_date))}</CTableDataCell>
                 <CTableDataCell>
-                  <Button variant="secondary" onClick={() => { setNewItemData({ packId: pack.id, name: '' }); setShowItemForm(true); }}>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setNewItemData({ packId: pack.id, name: '' });
+                      setShowItemForm(true);
+                    }}
+                  >
                     Add Item
                   </Button>
                 </CTableDataCell>
               </CTableRow>
             ))}
           </CTableBody>
-          </CTable>
+        </CTable>
         </CCardBody>
       </CCard>
 
