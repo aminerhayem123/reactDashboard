@@ -256,6 +256,20 @@ app.delete('/images/delete', async (req, res) => {
   }
 });
 
+// Route to filter items by name or ID
+app.get('/items/search', (req, res) => {
+  const { q } = req.query; // Assuming 'q' is the search query
+  if (!q) {
+    res.status(400).json({ message: 'Search query parameter "q" is required' });
+    return;
+  }
+  const filteredItems = items.filter(item =>
+    item.name.toLowerCase().includes(q.toLowerCase()) ||
+    item.id.toString().toLowerCase().includes(q.toLowerCase())
+  );
+  res.json(filteredItems);
+});
+
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
 });

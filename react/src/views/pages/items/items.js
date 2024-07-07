@@ -10,6 +10,7 @@ import {
   CTableHeaderCell,
   CTableRow,
   CButton,
+  CInputGroup,
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilUser } from '@coreui/icons';
@@ -18,6 +19,8 @@ import avatar from 'src/assets/images/avatars/1.jpg';
 
 const Items = () => {
   const [items, setItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchItems();
@@ -35,6 +38,7 @@ const Items = () => {
         avatar,
       }));
       setItems(itemsWithAvatars);
+      setFilteredItems(itemsWithAvatars);
     } catch (error) {
       console.error('Error fetching items:', error);
     }
@@ -49,15 +53,36 @@ const Items = () => {
         throw new Error('Network response was not ok');
       }
       setItems(items.filter(item => item.id !== id));
+      setFilteredItems(filteredItems.filter(item => item.id !== id));
     } catch (error) {
       console.error('Error deleting item:', error);
     }
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    const filtered = items.filter(item =>
+      item.name.toLowerCase().includes(value.toLowerCase()) ||
+      item.id.toString().toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredItems(filtered);
   };
 
   return (
     <CCard className="mb-4">
       <CCardHeader>Items</CCardHeader>
       <CCardBody>
+        <CInputGroup className="mb-3">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Search by Name or ID"
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </CInputGroup>
+
         <CTable align="middle" className="mb-0 border" hover responsive>
           <CTableHead className="text-nowrap">
             <CTableRow>
@@ -71,7 +96,7 @@ const Items = () => {
             </CTableRow>
           </CTableHead>
           <CTableBody>
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <CTableRow key={item.id}>
                 <CTableDataCell className="text-center">
                   <img src={item.avatar} className="rounded-circle" alt="avatar" width="48" height="48" />
