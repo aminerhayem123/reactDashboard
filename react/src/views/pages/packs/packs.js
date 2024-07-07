@@ -36,6 +36,8 @@ const Packs = () => {
     };
     return date.toLocaleString(undefined, options);
   };
+  const [brandFilter, setBrandFilter] = useState('');
+  const [packIdFilter, setPackIdFilter] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'ascending' });
   const [packs, setPacks] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -247,11 +249,36 @@ const Packs = () => {
     return null;
   };
 
+  const filteredPacks = useMemo(() => {
+    let filteredData = sortedPacks;
+  
+    if (brandFilter) {
+      filteredData = filteredData.filter(pack => pack.brand.toLowerCase().includes(brandFilter.toLowerCase()));
+    }
+  
+    if (packIdFilter) {
+      filteredData = filteredData.filter(pack => pack.id === parseInt(packIdFilter)); // Assuming pack ID is a number
+    }
+  
+    return filteredData;
+  }, [sortedPacks, brandFilter, packIdFilter]);
+  
   return (
     <>
-      <Button variant="primary" onClick={() => setShowForm(true)} className="mb-4">
-        Add Pack
-      </Button>
+      <div className="d-flex justify-content-between align-items-center mb-2">
+        <Button variant="primary" onClick={() => setShowForm(true)} className="mb-2">
+          Add Pack
+        </Button>
+        <div className="flex-grow-1 ms-3">
+          <Form.Control
+            type="text"
+            placeholder="Filter by Brand"
+            value={brandFilter}
+            onChange={(e) => setBrandFilter(e.target.value)}
+            style={{ width: '130px' }} // Adjust width as needed
+          />
+        </div>
+      </div>
       <CCard className="mb-4">
         <CCardHeader>Packs</CCardHeader>
         <CCardBody>
@@ -284,7 +311,7 @@ const Packs = () => {
             </CTableRow>
           </CTableHead>
           <CTableBody>
-          {sortedPacks.map((pack, index) => (
+          {filteredPacks.map((pack, index) => (
               <CTableRow key={index}>
                 <CTableDataCell className="text-center">
                   <img src={pack.avatar?.src || avatar1} className="rounded-circle" alt="avatar" width="40" height="40" />
