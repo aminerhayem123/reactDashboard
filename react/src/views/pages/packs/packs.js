@@ -19,7 +19,10 @@ import {
   Col,
 } from 'react-bootstrap';
 import { useDropzone } from 'react-dropzone';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCaretUp, faCaretDown } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
+import { useMemo } from 'react';
 import { Trash } from 'react-bootstrap-icons';
 import avatar1 from 'src/assets/images/avatars/1.jpg';
 
@@ -32,7 +35,7 @@ const Packs = () => {
     };
     return date.toLocaleString(undefined, options);
   };
-  
+  const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'ascending' });
   const [packs, setPacks] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [showItemForm, setShowItemForm] = useState(false);
@@ -63,7 +66,28 @@ const Packs = () => {
       console.error('Error fetching packs:', error);
     }
   };
-
+  const handleSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  const sortedPacks = useMemo(() => {
+    const sortablePacks = [...packs];
+    if (sortConfig.key === 'price') {
+      sortablePacks.sort((a, b) => {
+        if (sortConfig.direction === 'ascending') {
+          return a.price - b.price;
+        } else {
+          return b.price - a.price;
+        }
+      });
+    }
+    return sortablePacks;
+  }, [packs, sortConfig]);
+  
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -228,13 +252,21 @@ const Packs = () => {
               <CTableHeaderCell className="bg-body-tertiary">Brand</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Items</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Images</CTableHeaderCell>
-              <CTableHeaderCell className="bg-body-tertiary">Price</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary" onClick={() => handleSort('price')}>
+                Price
+                {sortConfig.key === 'price' && (
+                  <FontAwesomeIcon
+                    icon={sortConfig.direction === 'ascending' ? faCaretUp : faCaretDown}
+                    className="ms-2"
+                  />
+                )}
+              </CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Created Date</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Actions</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
           <CTableBody>
-            {packs.map((pack, index) => (
+          {sortedPacks.map((pack, index) => (
               <CTableRow key={index}>
                 <CTableDataCell className="text-center">
                   <img src={pack.avatar?.src || avatar1} className="rounded-circle" alt="avatar" width="40" height="40" />
