@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
   CContainer,
@@ -31,9 +31,9 @@ import { AppHeaderDropdown } from './header/index'
 const AppHeader = () => {
   const headerRef = useRef()
   const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
-
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
+  const location = useLocation()
 
   useEffect(() => {
     document.addEventListener('scroll', () => {
@@ -41,6 +41,19 @@ const AppHeader = () => {
         headerRef.current.classList.toggle('shadow-sm', document.documentElement.scrollTop > 0)
     })
   }, [])
+
+  const getHeaderText = () => {
+    switch (location.pathname) {
+      case '/Transactions':
+        return 'Transactions'
+      case '/packs':
+        return 'Packs'
+      case '/items':
+        return 'Items'
+      default:
+        return 'Dashboard'
+    }
+  }
 
   return (
     <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
@@ -54,7 +67,7 @@ const AppHeader = () => {
         <CHeaderNav className="d-none d-md-flex">
           <CNavItem>
             <CNavLink to="/dashboard" as={NavLink}>
-              Dashboard
+              {getHeaderText()}
             </CNavLink>
           </CNavItem>
         </CHeaderNav>
