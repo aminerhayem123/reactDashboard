@@ -21,6 +21,7 @@ import {
 import { useDropzone } from 'react-dropzone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretUp, faCaretDown } from '@fortawesome/free-solid-svg-icons';
+import { faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useMemo } from 'react';
 import { Trash } from 'react-bootstrap-icons';
@@ -84,18 +85,27 @@ const Packs = () => {
           return b.price - a.price;
         }
       });
+    } else if (sortConfig.key === 'date') {
+      sortablePacks.sort((a, b) => {
+        const dateA = new Date(a.created_date);
+        const dateB = new Date(b.created_date);
+        if (sortConfig.direction === 'ascending') {
+          return dateA - dateB;
+        } else {
+          return dateB - dateA;
+        }
+      });
     }
     return sortablePacks;
   }, [packs, sortConfig]);
   
   const handleFormChange = (e) => {
-    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [e.target.name]: e.target.value
     });
   };
-
+  
   const handleAddItem = () => {
     setFormData({
       ...formData,
@@ -261,7 +271,15 @@ const Packs = () => {
                   />
                 )}
               </CTableHeaderCell>
-              <CTableHeaderCell className="bg-body-tertiary">Created Date</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary" onClick={() => handleSort('date')}>
+                Date
+                {sortConfig.key === 'date' && (
+                  <FontAwesomeIcon
+                    icon={sortConfig.direction === 'ascending' ? faSortUp : faSortDown}
+                    className="ms-2"
+                  />
+                )}
+              </CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Actions</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
