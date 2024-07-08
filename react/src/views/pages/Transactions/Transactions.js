@@ -57,8 +57,11 @@ const Transactions = () => {
     const value = e.target.value;
     setSearchQuery(value);
     const filtered = transactions.filter(transaction =>
-      transaction.name.toLowerCase().includes(value.toLowerCase()) ||
-      transaction.id.toString().toLowerCase().includes(value.toLowerCase())
+      transaction.pack_id.toString().includes(value.toLowerCase()) ||
+      transaction.id.toString().includes(value.toLowerCase()) ||
+      transaction.sale_date.toLowerCase().includes(value.toLowerCase()) ||
+      transaction.amount.toString().includes(value.toLowerCase()) ||
+      transaction.profit.toString().includes(value.toLowerCase())
     );
     setFilteredTransactions(filtered);
   };
@@ -71,7 +74,7 @@ const Transactions = () => {
           <input
             type="text"
             className="form-control"
-            placeholder="Search by Name or ID"
+            placeholder="Search by Pack ID, ID, Sale Date, Amount, or Profit"
             value={searchQuery}
             onChange={handleSearchChange}
           />
@@ -84,9 +87,10 @@ const Transactions = () => {
                 <CIcon icon={cilUser} />
               </CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">ID</CTableHeaderCell>
-              <CTableHeaderCell className="bg-body-tertiary">Name</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Pack ID</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Sale Date</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Amount</CTableHeaderCell>
-              <CTableHeaderCell className="bg-body-tertiary">Date</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Profit</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Actions</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
@@ -97,9 +101,10 @@ const Transactions = () => {
                   <CIcon icon={cilUser} />
                 </CTableDataCell>
                 <CTableDataCell>{transaction.id}</CTableDataCell>
-                <CTableDataCell>{transaction.name}</CTableDataCell>
+                <CTableDataCell>{transaction.pack_id}</CTableDataCell>
+                <CTableDataCell>{transaction.sale_date}</CTableDataCell>
                 <CTableDataCell>{transaction.amount}</CTableDataCell>
-                <CTableDataCell>{transaction.date}</CTableDataCell>
+                <CTableDataCell>{transaction.profit}</CTableDataCell>
                 <CTableDataCell>
                   <CButton color="danger" onClick={() => deleteTransaction(transaction.id)}>
                     Delete

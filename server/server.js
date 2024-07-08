@@ -270,6 +270,21 @@ app.get('/items/search', (req, res) => {
   res.json(filteredItems);
 });
 
+
+
+// Endpoint to fetch transactions
+app.get('/transactions', async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query('SELECT id, pack_id, sale_date, amount, profit FROM transactions');
+    client.release();
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
 });
