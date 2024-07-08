@@ -42,7 +42,7 @@ app.post('/packs', upload.array('images', 10), async (req, res) => {
   }
 
   const images = req.files;
-  const status = 'Not_Sold'; // Assuming this represents the status of the pack
+  const status = 'Not Sold'; // Assuming this represents the status of the pack
 
   try {
     const client = await pool.connect();
