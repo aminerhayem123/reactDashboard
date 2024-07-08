@@ -18,6 +18,7 @@ import {
   Row,
   Col,
 } from 'react-bootstrap';
+import PackStatusCell from './PackStatusCell';
 import { useDropzone } from 'react-dropzone';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretUp, faCaretDown } from '@fortawesome/free-solid-svg-icons';
@@ -355,7 +356,7 @@ const Packs = () => {
                   <img src={pack.avatar?.src || avatar1} className="rounded-circle" alt="avatar" width="40" height="40" />
                 </CTableDataCell>
                 <CTableDataCell>{pack.brand}</CTableDataCell>
-                <CTableDataCell style={{ color: 'red' }}>{pack.status || 'Not_Sold'}</CTableDataCell>
+                <PackStatusCell status={pack.status} />
                 <CTableDataCell className="text-center">
                   {pack.items.map((item, idx) => (
                     <div key={idx}>
