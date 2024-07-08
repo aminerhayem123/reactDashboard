@@ -42,6 +42,7 @@ app.post('/packs', upload.array('images', 10), async (req, res) => {
   }
 
   const images = req.files;
+  const status = 'Not_Sold'; // Assuming this represents the status of the pack
 
   try {
     const client = await pool.connect();
@@ -51,8 +52,8 @@ app.post('/packs', upload.array('images', 10), async (req, res) => {
     const packId = `${randomLetters}${randomNumber}`;
 
     const result = await client.query(
-      'INSERT INTO packs (id, brand, price) VALUES ($1, $2, $3) RETURNING id, created_date',
-      [packId, brand, parseFloat(price)]
+      'INSERT INTO packs (id, brand, price, status) VALUES ($1, $2, $3, $4) RETURNING id, created_date',
+      [packId, brand, parseFloat(price), status]
     );    
     const { id: insertedPackId, created_date } = result.rows[0];
 
@@ -77,7 +78,6 @@ app.post('/packs', upload.array('images', 10), async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-
 
 app.get('/packs', async (req, res) => {
   try {

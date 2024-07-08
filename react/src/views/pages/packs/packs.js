@@ -287,6 +287,7 @@ const Packs = () => {
             <CTableRow>
               <CTableHeaderCell className="bg-body-tertiary text-center">User</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Brand</CTableHeaderCell>
+              <CTableHeaderCell className="bg-body-tertiary">Status</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Items</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Images</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary" onClick={() => handleSort('price')}>
@@ -317,6 +318,7 @@ const Packs = () => {
                   <img src={pack.avatar?.src || avatar1} className="rounded-circle" alt="avatar" width="40" height="40" />
                 </CTableDataCell>
                 <CTableDataCell>{pack.brand}</CTableDataCell>
+                <CTableDataCell style={{ color: 'red' }}>{pack.status || 'Not_Sold'}</CTableDataCell>
                 <CTableDataCell className="text-center">
                   {pack.items.map((item, idx) => (
                     <div key={idx}>
