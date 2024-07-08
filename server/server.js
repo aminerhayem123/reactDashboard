@@ -333,6 +333,56 @@ app.get('/transactions', async (req, res) => {
   }
 });
 
+app.delete('/transactions/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const client = await pool.connect();
+
+    // Fetch transaction details to find the pack_id
+    const transactionQuery = 'SELECT * FROM transactions WHERE id = $1';
+    const transactionResult = await client.query(transactionQuery, [id]);
+    const transaction = transactionResult.rows[0];
+
+    if (!transaction) {
+      client.release();
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+
+    const { pack_id } = transaction;
+
+    // Delete transaction from database
+    const deleteTransactionQuery = 'DELETE FROM transactions WHERE id = $1';
+    await client.query(deleteTransactionQuery, [id]);
+
+    // Check if there are any remaining transactions for the same pack_id
+    const remainingTransactionsQuery = 'SELECT * FROM transactions WHERE pack_id = $1';
+    const remainingTransactionsResult = await client.query(remainingTransactionsQuery, [pack_id]);
+    const remainingTransactions = remainingTransactionsResult.rows;
+
+    // Update pack status based on remaining transactions
+    const updatePackQuery = `
+      UPDATE packs SET status = $1 WHERE id = $2
+    `;
+
+    if (remainingTransactions.length === 0) {
+      // No remaining transactions, set pack status to 'Not Sold'
+      await client.query(updatePackQuery, ['Not Sold', pack_id]);
+    } else {
+      // There are remaining transactions, keep pack status as 'Sold'
+      await client.query(updatePackQuery, ['Sold', pack_id]);
+    }
+
+    client.release();
+
+    res.json({ message: 'Transaction deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting transaction:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
 });

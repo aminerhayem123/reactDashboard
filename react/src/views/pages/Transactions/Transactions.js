@@ -43,15 +43,20 @@ const Transactions = () => {
       const response = await fetch(`http://localhost:5000/transactions/${id}`, {
         method: 'DELETE',
       });
+  
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      setTransactions(transactions.filter(transaction => transaction.id !== id));
-      setFilteredTransactions(filteredTransactions.filter(transaction => transaction.id !== id));
+  
+      // If deletion is successful, fetch updated transactions
+      await fetchTransactions();
     } catch (error) {
-      console.error('Error deleting transaction:', error);
+      console.error('Error deleting transaction:', error.message);
+      // Add error handling here, such as showing an error message to the user
     }
   };
+  
+  
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
