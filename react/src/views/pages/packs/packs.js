@@ -323,7 +323,6 @@ const Packs = () => {
         <CTable align="middle" className="mb-0 border" hover responsive>
           <CTableHead className="text-nowrap">
             <CTableRow>
-              <CTableHeaderCell className="bg-body-tertiary text-center">User</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Brand</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Status</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Items</CTableHeaderCell>
@@ -352,9 +351,6 @@ const Packs = () => {
           <CTableBody>
           {filteredPacks.map((pack, index) => (
               <CTableRow key={index}>
-                <CTableDataCell className="text-center">
-                  <img src={pack.avatar?.src || avatar1} className="rounded-circle" alt="avatar" width="40" height="40" />
-                </CTableDataCell>
                 <CTableDataCell>{pack.brand}</CTableDataCell>
                 <PackStatusCell status={pack.status} />
                 <CTableDataCell className="text-center">

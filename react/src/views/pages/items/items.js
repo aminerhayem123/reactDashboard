@@ -86,9 +86,6 @@ const Items = () => {
         <CTable align="middle" className="mb-0 border" hover responsive>
           <CTableHead className="text-nowrap">
             <CTableRow>
-              <CTableHeaderCell className="bg-body-tertiary text-center">
-                <CIcon icon={cilUser} />
-              </CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">ID</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Name</CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary">Pack ID</CTableHeaderCell>
@@ -98,9 +95,6 @@ const Items = () => {
           <CTableBody>
             {filteredItems.map((item) => (
               <CTableRow key={item.id}>
-                <CTableDataCell className="text-center">
-                  <img src={item.avatar} className="rounded-circle" alt="avatar" width="48" height="48" />
-                </CTableDataCell>
                 <CTableDataCell>{item.id}</CTableDataCell>
                 <CTableDataCell>{item.name}</CTableDataCell>
                 <CTableDataCell>{item.pack_id}</CTableDataCell>
