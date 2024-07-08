@@ -44,6 +44,11 @@ const Packs = () => {
   const [showItemForm, setShowItemForm] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false); // State for image modal
   const [modalImages, setModalImages] = useState([]); // State to hold images for modal display
+  const [showSaleModal, setShowSaleModal] = useState(false);
+  const [saleAmount, setSaleAmount] = useState('');
+  const [selectedPackId, setSelectedPackId] = useState(null);
+  const [selectedPackPrice, setSelectedPackPrice] = useState(0);
+
   const [formData, setFormData] = useState({
     brand: '',
     numberOfItems: 1,
@@ -57,7 +62,7 @@ const Packs = () => {
   });
   const [selectedImageIds, setSelectedImageIds] = useState([]); // State to hold IDs of selected images to delete
 
-  useEffect(() => {
+   useEffect(() => {
     fetchPacks();
   }, []);
 
@@ -69,6 +74,7 @@ const Packs = () => {
       console.error('Error fetching packs:', error);
     }
   };
+
   const handleSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -263,8 +269,39 @@ const Packs = () => {
     return filteredData;
   }, [sortedPacks, brandFilter, packIdFilter]);
   
+  const handleSold = (packId, packPrice) => {
+    setSelectedPackId(packId);
+    setSelectedPackPrice(packPrice);
+    setShowSaleModal(true);
+  };
+
+  const handleSaleSubmit = async (e) => {
+    e.preventDefault();
+  
+    const profit = saleAmount - selectedPackPrice;
+  
+    try {
+      const response = await axios.post(`http://localhost:5000/packs/${selectedPackId}/sold`, {
+        amount: saleAmount,
+        profit: profit,
+      });
+  
+      console.log('Sale recorded successfully:', response.data);
+  
+      // Close the modal after submitting
+      setShowSaleModal(false);
+  
+      // Refresh packs data
+      fetchPacks();
+    } catch (error) {
+      console.error('Error recording sale:', error);
+    }
+  };
+  
+
   return (
     <>
+      
       <div className="d-flex justify-content-between align-items-center mb-2">
         <Button variant="primary" onClick={() => setShowForm(true)} className="mb-2">
           Add Pack
@@ -294,9 +331,9 @@ const Packs = () => {
                 Price
                 {sortConfig.key === 'price' && (
                   <FontAwesomeIcon
-                    icon={sortConfig.direction === 'ascending' ? faCaretUp : faCaretDown}
-                    className="ms-2"
-                  />
+                  icon={sortConfig.key === 'price' ? (sortConfig.direction === 'ascending' ? faCaretUp : faCaretDown) : (sortConfig.direction === 'ascending' ? faSortUp : faSortDown)}
+                  className="ms-2"
+                />
                 )}
               </CTableHeaderCell>
               <CTableHeaderCell className="bg-body-tertiary" onClick={() => handleSort('date')}>
@@ -353,6 +390,12 @@ const Packs = () => {
                     }}
                   >
                     Add Item
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={() => handleSold(pack.id, pack.price)}
+                  >
+                    Mark as Sold
                   </Button>
                 </CTableDataCell>
               </CTableRow>
@@ -501,6 +544,29 @@ const Packs = () => {
             </Form.Group>
             <Button variant="primary" type="submit">
               Add Item
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
+       {/* Modal for marking pack as sold */}
+       <Modal show={showSaleModal} onHide={() => setShowSaleModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Sold</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleSaleSubmit}>
+            <Form.Group controlId="amount">
+              <Form.Label>Amount</Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Enter amount"
+                value={saleAmount}
+                onChange={(e) => setSaleAmount(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Button variant="primary" type="submit">
+              Submit
             </Button>
           </Form>
         </Modal.Body>

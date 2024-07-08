@@ -270,7 +270,55 @@ app.get('/items/search', (req, res) => {
   res.json(filteredItems);
 });
 
+app.post('/packs/:id/sold', async (req, res) => {
+  const { id } = req.params;
 
+  try {
+    const client = await pool.connect();
+
+    // Fetch pack details
+    const packQuery = 'SELECT * FROM packs WHERE id = $1';
+    const packResult = await client.query(packQuery, [id]);
+    const pack = packResult.rows[0];
+
+    if (!pack) {
+      client.release();
+      return res.status(404).json({ message: 'Pack not found' });
+    }
+
+    // Calculate profit (assuming profit is amount received - pack price)
+    const { price } = pack;
+    const { amount } = req.body;
+
+    // Validate 'amount' to ensure it's a valid number
+    if (!parseFloat(amount)) {
+      client.release();
+      return res.status(400).json({ message: 'Invalid amount' });
+    }
+
+    const profit = parseFloat(amount) - parseFloat(price);
+
+    // Insert transaction into database
+    const insertTransactionQuery = `
+      INSERT INTO transactions (pack_id, amount, profit)
+      VALUES ($1, $2, $3)
+      RETURNING id, sale_date
+    `;
+    const transactionResult = await client.query(insertTransactionQuery, [id, parseFloat(amount), profit]);
+    const { id: transactionId, sale_date } = transactionResult.rows[0];
+
+    // Update pack status to 'Sold' in the packs table
+    const updatePackQuery = 'UPDATE packs SET status = $1 WHERE id = $2';
+    await client.query(updatePackQuery, ['Sold', id]);
+
+    client.release();
+
+    res.json({ message: 'Pack marked as sold successfully' });
+  } catch (error) {
+    console.error('Error marking pack as sold:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // Endpoint to fetch transactions
 app.get('/transactions', async (req, res) => {
