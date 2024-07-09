@@ -186,7 +186,7 @@ app.delete('/items/:id', async (req, res) => {
     if (remainingItemCount === 0) {
       // Delete associated images due to ON DELETE CASCADE
       await client.query('DELETE FROM images WHERE pack_id = $1', [packId]);
-
+      await client.query('DELETE FROM transactions WHERE pack_id = $1', [packId]);
       // Delete the pack itself
       await client.query('DELETE FROM packs WHERE id = $1', [packId]);
     }
