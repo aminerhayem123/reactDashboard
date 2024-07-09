@@ -37,9 +37,16 @@ app.post('/login', async (req, res) => {
 
 app.post('/packs', upload.array('images', 10), async (req, res) => {
   const { brand, price } = req.body;
-  const items = req.body.items.split(',').map(item => item.trim()); // Split items into an array
 
-  if (!brand || !items || !price) {
+  // Handle items as either comma-separated string or array
+  let items = req.body.items;
+  if (typeof items === 'string') {
+    items = items.split(',').map(item => item.trim());
+  } else if (!Array.isArray(items)) {
+    items = [];
+  }
+
+  if (!brand || !items.length || !price) {
     return res.status(400).json({ message: 'Brand, items, and price are required' });
   }
 
