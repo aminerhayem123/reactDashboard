@@ -143,34 +143,39 @@ const Packs = () => {
   
     const data = new FormData();
     data.append('brand', formData.brand);
-    data.append('price', formData.price); // Add price to form data
+    data.append('price', formData.price);
+  
+    // Append items as an array of strings
     formData.items.forEach((item, index) => {
-      data.append(`items`, item);
+      data.append('items', item); // Assuming 'item' is a string
     });
+  
+    // Append images as files
     formData.images.forEach((image, index) => {
-      data.append(`images`, image);
+      data.append('images', image); // Assuming 'image' is a File object
     });
   
     try {
-      await axios.post('http://localhost:5000/packs', data, {
+      const response = await axios.post('http://localhost:5000/packs', data, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      fetchPacks();
-      setShowForm(false);
+  
+      console.log('Pack creation response:', response.data);
+      fetchPacks(); // Update pack list
+      setShowForm(false); // Hide the form after successful submission
       setFormData({
         brand: '',
         numberOfItems: 1,
         items: [''],
         images: [],
-        price: '' // Reset price
+        price: '' // Clear price input
       });
     } catch (error) {
       console.error('Error creating pack:', error);
     }
-  };
-  
+  };  
 
   const handleAddNewItem = async (e) => {
     e.preventDefault();

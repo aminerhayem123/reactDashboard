@@ -36,13 +36,16 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/packs', upload.array('images', 10), async (req, res) => {
-  const { brand, items, price } = req.body;
+  const { brand, price } = req.body;
+  const items = req.body.items.split(',').map(item => item.trim()); // Split items into an array
+
   if (!brand || !items || !price) {
     return res.status(400).json({ message: 'Brand, items, and price are required' });
   }
 
   const images = req.files;
-  const status = 'Not Sold'; // Assuming this represents the status of the pack
+
+  const status = 'Not Sold';
 
   try {
     const client = await pool.connect();
@@ -54,7 +57,8 @@ app.post('/packs', upload.array('images', 10), async (req, res) => {
     const result = await client.query(
       'INSERT INTO packs (id, brand, price, status) VALUES ($1, $2, $3, $4) RETURNING id, created_date',
       [packId, brand, parseFloat(price), status]
-    );    
+    );
+
     const { id: insertedPackId, created_date } = result.rows[0];
 
     const itemQueries = items.map((itemName, index) => {
