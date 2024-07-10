@@ -393,6 +393,18 @@ app.delete('/transactions/:id', async (req, res) => {
   }
 });
 
+app.get('/packs/count', async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query('SELECT COUNT(*) FROM packs');
+    const packCount = parseInt(result.rows[0].count);
+    client.release();
+    res.json({ count: packCount });
+  } catch (error) {
+    console.error('Error fetching pack count:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');

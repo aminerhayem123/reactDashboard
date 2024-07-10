@@ -1,6 +1,5 @@
-import React, { useEffect, useRef } from 'react'
-import PropTypes from 'prop-types'
-
+import React, { useEffect, useRef , useState } from 'react';
+import PropTypes from 'prop-types';
 import {
   CRow,
   CCol,
@@ -9,46 +8,51 @@ import {
   CDropdownItem,
   CDropdownToggle,
   CWidgetStatsA,
-} from '@coreui/react'
-import { getStyle } from '@coreui/utils'
-import { CChartBar, CChartLine } from '@coreui/react-chartjs'
-import CIcon from '@coreui/icons-react'
-import { cilArrowBottom, cilArrowTop, cilOptions } from '@coreui/icons'
+} from '@coreui/react';
+import { getStyle } from '@coreui/utils';
+import { CChartBar, CChartLine } from '@coreui/react-chartjs';
+import CIcon from '@coreui/icons-react';
+import { cilArrowBottom, cilArrowTop, cilOptions } from '@coreui/icons';
 
 const WidgetsDropdown = (props) => {
-  const widgetChartRef1 = useRef(null)
-  const widgetChartRef2 = useRef(null)
+  const [packCount, setPackCount] = useState(null);
 
   useEffect(() => {
-    document.documentElement.addEventListener('ColorSchemeChange', () => {
-      if (widgetChartRef1.current) {
-        setTimeout(() => {
-          widgetChartRef1.current.data.datasets[0].pointBackgroundColor = getStyle('--cui-primary')
-          widgetChartRef1.current.update()
-        })
+    const fetchPackCount = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/packs/count');
+        if (!response.ok) {
+          throw new Error('Failed to fetch pack count');
+        }
+        
+        const data = await response.json();
+        setPackCount(data.count); // Update state with packCount from API
+      } catch (error) {
+        console.error('Error fetching pack count:', error);
+        // Handle error, set packCount or show error message
       }
+    };
 
-      if (widgetChartRef2.current) {
-        setTimeout(() => {
-          widgetChartRef2.current.data.datasets[0].pointBackgroundColor = getStyle('--cui-info')
-          widgetChartRef2.current.update()
-        })
-      }
-    })
-  }, [widgetChartRef1, widgetChartRef2])
-
+    fetchPackCount();
+  }, []);
+  
+  
   return (
     <CRow className={props.className} xs={{ gutter: 4 }}>
       <CCol sm={6} xl={4} xxl={3}>
         <CWidgetStatsA
           color="primary"
           value={
-            <>
-              26K{' '}
-              <span className="fs-6 fw-normal">
-                (-12.4% <CIcon icon={cilArrowTop} />)
-              </span>
-            </>
+            packCount !== null ? (
+              <>
+                {packCount}
+                <span className="fs-6 fw-normal">
+                  (-12.4% <CIcon icon={cilArrowTop} />)
+                </span>
+              </>
+            ) : (
+              'Loading...' // Or another loading indicator
+            )
           }
           title="Packs"
           action={
@@ -60,7 +64,6 @@ const WidgetsDropdown = (props) => {
           }
           chart={
             <CChartLine
-              ref={widgetChartRef1}
               className="mt-3 mx-3"
               style={{ height: '70px' }}
               data={{
@@ -144,7 +147,6 @@ const WidgetsDropdown = (props) => {
           }
           chart={
             <CChartLine
-              ref={widgetChartRef2}
               className="mt-3 mx-3"
               style={{ height: '70px' }}
               data={{
