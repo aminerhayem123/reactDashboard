@@ -4,8 +4,6 @@ import {
   CRow,
   CCol,
   CDropdown,
-  CDropdownMenu,
-  CDropdownItem,
   CDropdownToggle,
   CWidgetStatsA,
 } from '@coreui/react';
@@ -16,6 +14,7 @@ import { cilArrowBottom, cilArrowTop, cilOptions } from '@coreui/icons';
 
 const WidgetsDropdown = (props) => {
   const [packCount, setPackCount] = useState(null);
+  const [packsold, setPacksold] = useState(null);
 
   useEffect(() => {
     const fetchPackCount = async () => {
@@ -36,6 +35,24 @@ const WidgetsDropdown = (props) => {
     fetchPackCount();
   }, []);
   
+  useEffect(() => {
+    const fetchPackSold = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/packs/Sold');
+        if (!response.ok) {
+          throw new Error('Failed to fetch pack count');
+        }
+        
+        const data = await response.json();
+        setPacksold(data.count); // Update state with packCount from API
+      } catch (error) {
+        console.error('Error fetching pack count:', error);
+        // Handle error, set packCount or show error message
+      }
+    };
+
+    fetchPackSold();
+  }, []);
   
   return (
     <CRow className={props.className} xs={{ gutter: 4 }}>
@@ -43,15 +60,12 @@ const WidgetsDropdown = (props) => {
         <CWidgetStatsA
           color="primary"
           value={
-            packCount !== null ? (
+            packCount != null ? (
               <>
                 {packCount}
-                <span className="fs-6 fw-normal">
-                  (-12.4% <CIcon icon={cilArrowTop} />)
-                </span>
               </>
             ) : (
-              'Loading...' // Or another loading indicator
+              '0'
             )
           }
           title="Packs"
@@ -128,23 +142,27 @@ const WidgetsDropdown = (props) => {
       </CCol>
       <CCol sm={6} xl={4} xxl={3}>
         <CWidgetStatsA
-          color="info"
-          value={
-            <>
-              $6.200{' '}
-              <span className="fs-6 fw-normal">
-                (40.9% <CIcon icon={cilArrowTop} />)
-              </span>
-            </>
-          }
-          title="Income"
-          action={
-            <CDropdown alignment="end">
-              <CDropdownToggle color="transparent" caret={false} className="text-white p-0">
-                <CIcon icon={cilOptions} />
-              </CDropdownToggle>
-            </CDropdown>
-          }
+            color="info"
+            value={
+              packsold != null ? (
+                <>
+                  {packsold}
+                  <span className="fs-6 fw-normal ml-4">
+                    (40.9% <CIcon icon={cilArrowTop} />)
+                  </span>
+                </>
+              ) : (
+                '0'
+              )
+            }
+            title="Sold"
+            action={
+              <CDropdown alignment="end">
+                <CDropdownToggle color="transparent" caret={false} className="text-white p-0">
+                  <CIcon icon={cilOptions} />
+                </CDropdownToggle>
+              </CDropdown>
+            }
           chart={
             <CChartLine
               className="mt-3 mx-3"

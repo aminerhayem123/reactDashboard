@@ -406,6 +406,19 @@ app.get('/packs/count', async (req, res) => {
   }
 });
 
+app.get('/packs/Sold', async (req, res) => {
+  try {
+    const client = await pool.connect();
+    const result = await client.query('SELECT COUNT(*) FROM packs WHERE Status = $1', ['Sold']);
+    const packSold = parseInt(result.rows[0].count, 10); // Ensure to parse to integer
+    client.release();
+    res.json({ count: packSold });
+  } catch (error) {
+    console.error('Error fetching pack count:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
 });
