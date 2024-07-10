@@ -37,8 +37,7 @@ const Packs = () => {
     };
     return date.toLocaleString(undefined, options);
   };
-  const [brandFilter, setBrandFilter] = useState('');
-  const [packIdFilter, setPackIdFilter] = useState('');
+  const [searchFilter, setSearchFilter] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'ascending' });
   const [packs, setPacks] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -75,7 +74,7 @@ const Packs = () => {
       console.error('Error fetching packs:', error);
     }
   };
-
+  
   const handleSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -263,17 +262,16 @@ const Packs = () => {
 
   const filteredPacks = useMemo(() => {
     let filteredData = sortedPacks;
-  
-    if (brandFilter) {
-      filteredData = filteredData.filter(pack => pack.brand.toLowerCase().includes(brandFilter.toLowerCase()));
-    }
-  
-    if (packIdFilter) {
-      filteredData = filteredData.filter(pack => pack.id === parseInt(packIdFilter)); // Assuming pack ID is a number
-    }
-  
+    // Filter by search input
+  if (searchFilter) {
+    const lowercasedFilter = searchFilter.toLowerCase();
+    filteredData = filteredData.filter(pack => 
+      pack.brand.toLowerCase().includes(lowercasedFilter) ||
+      pack.id.toString().toLowerCase().includes(lowercasedFilter)
+    );
+  }
     return filteredData;
-  }, [sortedPacks, brandFilter, packIdFilter]);
+  }, [sortedPacks,searchFilter]);
   
   const handleSold = (packId, packPrice) => {
     setSelectedPackId(packId);
@@ -312,15 +310,15 @@ const Packs = () => {
         <Button variant="primary" onClick={() => setShowForm(true)} className="mb-2">
           Add Pack
         </Button>
-        <div className="flex-grow-1 ms-3">
-          <Form.Control
-            type="text"
-            placeholder="Filter by Brand"
-            value={brandFilter}
-            onChange={(e) => setBrandFilter(e.target.value)}
-            style={{ width: '130px' }} // Adjust width as needed
-          />
-        </div>
+          <div className="flex-grow-1 ms-3">
+            <Form.Control
+              type="text"
+              placeholder="Filter by Brand or Pack ID"
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              style={{ width: '250px' }} // Adjust width as needed
+            />
+          </div>
       </div>
       <CCard className="mb-4">
         <CCardHeader>Packs</CCardHeader>
