@@ -436,96 +436,102 @@ const Packs = () => {
 
       {/* Add Pack Modal */}
       <Modal show={showForm} onHide={() => setShowForm(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Add Pack</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form onSubmit={handleSubmit}>
-            <Form.Group controlId="formBrand">
-              <Form.Label>Brand</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Enter brand"
-                name="brand"
-                value={formData.brand}
-                onChange={handleFormChange}
-                required
-              />
-            </Form.Group>
-            <Form.Group controlId="formPrice">
-            <Form.Label>Price</Form.Label>
+  <Modal.Header closeButton>
+    <Modal.Title>Add Pack</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <Form onSubmit={handleSubmit}>
+      <Form.Group controlId="formBrand">
+        <Form.Label>Brand</Form.Label>
+        <Form.Control
+          type="text"
+          placeholder="Enter brand"
+          name="brand"
+          value={formData.brand}
+          onChange={handleFormChange}
+          required
+        />
+      </Form.Group>
+      <Form.Group controlId="formPrice">
+        <Form.Label>Price</Form.Label>
+        <Form.Control
+          type="number"
+          placeholder="Enter price"
+          name="price"
+          value={formData.price}
+          onChange={handleFormChange}
+          required
+        />
+      </Form.Group>
+      <Form.Group controlId="formNumberOfItems">
+        <Form.Label>Number of Items</Form.Label>
+        <Form.Control
+          type="number"
+          placeholder="Enter number of items"
+          name="numberOfItems"
+          value={formData.numberOfItems}
+          onChange={handleFormChange}
+          required
+        />
+      </Form.Group>
+      <Form.Group controlId="formItems">
+        <Form.Label>Items</Form.Label>
+        {formData.items.map((item, index) => (
+          <div key={index} className="mb-2 d-flex align-items-center">
             <Form.Control
-              type="number"
-              placeholder="Enter price"
-              name="price"
-              value={formData.price}
-              onChange={handleFormChange}
+              type="text"
+              placeholder={`Item ${index + 1}`}
+              value={item}
+              onChange={(e) => handleItemChange(index, e.target.value)}
               required
+              style={{ marginRight: '10px' }}
             />
-          </Form.Group>
-            <Form.Group controlId="formNumberOfItems">
-              <Form.Label>Number of Items</Form.Label>
-              <Form.Control
-                type="number"
-                placeholder="Enter number of items"
-                name="numberOfItems"
-                value={formData.numberOfItems}
-                onChange={handleFormChange}
-                required
-              />
-            </Form.Group>
-            <Form.Group controlId="formItems">
-              <Form.Label>Items</Form.Label>
-              {formData.items.map((item, index) => (
-                <div key={index} className="mb-2 d-flex align-items-center">
-                  <Form.Control
-                    type="text"
-                    placeholder={`Item ${index + 1}`}
-                    value={item}
-                    onChange={(e) => handleItemChange(index, e.target.value)}
-                    required
-                    style={{ marginRight: '10px' }}
-                  />
-                  <Button
-                    variant="outline-danger"
-                    onClick={() => {
-                      const newItems = [...formData.items];
-                      newItems.splice(index, 1);
-                      setFormData({
-                        ...formData,
-                        items: newItems,
-                      });
-                    }}
-                    className="align-self-start"
-                  >
-                    <Trash />
-                  </Button>
-                </div>
-              ))}
-              <Button variant="outline-primary" onClick={handleAddItem}>
-                Add Item
-              </Button>
-            </Form.Group>
-            <Form.Group controlId="formImages">
-              <Form.Label>Images</Form.Label>
-              <div style={{ border: '2px dashed #ccc', padding: '20px', textAlign: 'center', cursor: 'pointer', marginTop: '10px' }} {...getRootProps({ className: 'dropzone' })}>
-                <input {...getInputProps()} />
-                <p>Import Pictures</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: '10px' }}>
-                  {formData.images.map((file, index) => (
-                    <div key={index} style={{ width: '100px', height: '100px', marginRight: '10px', marginBottom: '10px', position: 'relative' }}>
-                      <img src={URL.createObjectURL(file)} alt={`Preview-${index}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '5px' }} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Form.Group>
-            <Button variant="primary" type="submit">
-              Submit
+            <Button
+              variant="outline-danger"
+              onClick={() => {
+                const newItems = [...formData.items];
+                newItems.splice(index, 1);
+                setFormData({
+                  ...formData,
+                  items: newItems,
+                });
+              }}
+              className="align-self-start"
+            >
+              <Trash />
             </Button>
-          </Form>
-        </Modal.Body>
-      </Modal>
+          </div>
+        ))}
+        <Button variant="outline-primary" onClick={handleAddItem}>
+          Add Item
+        </Button>
+      </Form.Group>
+      <Form.Group controlId="formImages">
+        <Form.Label>Images</Form.Label>
+        <div style={{ border: '2px dashed #ccc', padding: '20px', textAlign: 'center', cursor: 'pointer', marginTop: '10px' }} {...getRootProps({ className: 'dropzone' })}>
+          <input {...getInputProps()} />
+          <p>Import Pictures</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', marginTop: '10px' }}>
+            {formData.images.map((file, index) => (
+              <div key={index} style={{ width: '100px', height: '100px', marginRight: '10px', marginBottom: '10px', position: 'relative' }}>
+                <img src={URL.createObjectURL(file)} alt={`Preview-${index}`} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '5px' }} />
+              </div>
+            ))}
+          </div>
+          {formData.images.length > 0 && (
+            <Button variant="outline-danger" onClick={() => setFormData({ ...formData, images: [] })} style={{ marginTop: '10px' }}>
+              Clear Images
+            </Button>
+          )}
+        </div>
+      </Form.Group>
+      <Button variant="primary" type="submit">
+        Submit
+      </Button>
+    </Form>
+  </Modal.Body>
+</Modal>
+
 
       {/* Add Item Modal */}
       <Modal show={showItemForm} onHide={() => setShowItemForm(false)}>
