@@ -433,6 +433,37 @@ app.get('/packs/Sold', async (req, res) => {
   }
 });
 
+// Endpoint to calculate and return the sum of profits and percentage of profits
+app.get('/transactions/profits', async (req, res) => {
+  try {
+    const client = await pool.connect();
+
+    // Calculate total profit
+    const profitQuery = 'SELECT SUM(profit) AS total_profit FROM transactions';
+    const profitResult = await client.query(profitQuery);
+    const totalProfit = parseFloat(profitResult.rows[0].total_profit) || 0;
+
+    // Calculate total amount received
+    const amountQuery = 'SELECT SUM(amount) AS total_amount FROM transactions';
+    const amountResult = await client.query(amountQuery);
+    const totalAmount = parseFloat(amountResult.rows[0].total_amount) || 0;
+
+    // Calculate percentage of profits
+    let percentageProfit = 0;
+    if (totalAmount > 0) {
+      percentageProfit = (totalProfit / totalAmount) * 100;
+    }
+
+    client.release();
+
+    res.json({ totalProfit, percentageProfit });
+  } catch (error) {
+    console.error('Error calculating total profits:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
 });

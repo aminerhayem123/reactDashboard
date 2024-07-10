@@ -16,6 +16,8 @@ const WidgetsDropdown = (props) => {
   const [packCount, setPackCount] = useState(null);
   const [packsold, setPacksold] = useState(null);
   const [percentageSold, setPercentageSold] = useState(null);
+  const [totalProfit, setTotalProfit] = useState(null);
+  const [percentageProfit, setPercentageProfit] = useState(null);
 
   useEffect(() => {
     const fetchPackCount = async () => {
@@ -45,17 +47,42 @@ const WidgetsDropdown = (props) => {
         }
         
         const data = await response.json();
-        setPacksold(data.count); // Update state with packCount from API
+        setPacksold(data.count); // Update state with SoldCount from API
         setPercentageSold(data.percentage); // Update state with percentageSold from API
       } catch (error) {
         console.error('Error fetching pack count:', error);
-        // Handle error, set packCount or show error message
+        // Handle error, set soldCount or show error message
       }
     };
 
     fetchPackSold();
   }, []);
   
+   useEffect(() => {
+    const fetchProfitData = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/transactions/profits');
+        if (!response.ok) {
+          throw new Error('Failed to fetch profit data');
+        }
+        
+        const data = await response.json();
+        setTotalProfit(data.totalProfit); // Update state with totalProfit from API
+        setPercentageProfit(data.percentageProfit); // Update state with percentageProfit from API
+      } catch (error) {
+        console.error('Error fetching profit data:', error);
+        // Handle error, set totalProfit or show error message
+      }
+    };
+
+    fetchProfitData();
+  }, []);
+
+  // Function to format percentage to 3 decimal places
+  const formatPercentage = (percentage) => {
+    return parseFloat(percentage).toFixed(3);
+  };
+
   return (
     <CRow className={props.className} xs={{ gutter: 4 }}>
       <CCol sm={6} xl={4} xxl={3}>
@@ -150,7 +177,7 @@ const WidgetsDropdown = (props) => {
                 <>
                   {packsold} &nbsp;
                   <span className="fs-6 fw-normal ml-4">
-                    ({percentageSold}% <CIcon icon={cilArrowTop} />)
+                    ({percentageSold.toFixed(3)}% <CIcon icon={cilArrowTop} />)
                   </span>
                 </>
               ) : (
@@ -232,14 +259,18 @@ const WidgetsDropdown = (props) => {
         <CWidgetStatsA
           color="warning"
           value={
-            <>
-              2.49%{' '}
-              <span className="fs-6 fw-normal">
-                (84.7% <CIcon icon={cilArrowTop} />)
-              </span>
-            </>
+            totalProfit != null ? (
+              <>
+                {totalProfit} &nbsp;
+                <span className="fs-6 fw-normal ml-4">
+                  ({percentageProfit.toFixed(3)}% <CIcon icon={cilArrowTop} />)
+                </span>
+              </>
+            ) : (
+              '0'
+            )
           }
-          title="Conversion Rate"
+          title="Incomes"
           action={
             <CDropdown alignment="end">
               <CDropdownToggle color="transparent" caret={false} className="text-white p-0">
