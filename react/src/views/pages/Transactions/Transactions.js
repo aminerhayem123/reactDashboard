@@ -59,17 +59,22 @@ const Transactions = () => {
   
 
   const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchQuery(value);
+    const value = e.target.value.toLowerCase(); // Convert search query to lowercase once
+  
+    setSearchQuery(value); // Update search query state
+  
+    // Filter transactions based on search query
     const filtered = transactions.filter(transaction =>
-      transaction.pack_id.toString().includes(value.toLowerCase()) ||
-      transaction.id.toString().includes(value.toLowerCase()) ||
-      transaction.sale_date.toLowerCase().includes(value.toLowerCase()) ||
-      transaction.amount.toString().includes(value.toLowerCase()) ||
-      transaction.profit.toString().includes(value.toLowerCase())
+      transaction.pack_id.toString().toLowerCase().includes(value) ||
+      transaction.id.toString().toLowerCase().includes(value) ||
+      transaction.sale_date.toLowerCase().includes(value) ||
+      transaction.amount.toString().toLowerCase().includes(value) ||
+      transaction.profit.toString().toLowerCase().includes(value)
     );
-    setFilteredTransactions(filtered);
+  
+    setFilteredTransactions(filtered); // Update filtered transactions state
   };
+  
 
   return (
     <CCard className="mb-4">
@@ -79,7 +84,7 @@ const Transactions = () => {
           <input
             type="text"
             className="form-control"
-            placeholder="Search by Pack ID, ID, Sale Date, Amount, or Profit"
+            placeholder="Search by Sale Date, Amount, or Profit"
             value={searchQuery}
             onChange={handleSearchChange}
           />
