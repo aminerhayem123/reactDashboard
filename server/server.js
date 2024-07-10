@@ -409,10 +409,24 @@ app.get('/packs/count', async (req, res) => {
 app.get('/packs/Sold', async (req, res) => {
   try {
     const client = await pool.connect();
+
+    // Query to get count of sold packs
     const result = await client.query('SELECT COUNT(*) FROM packs WHERE Status = $1', ['Sold']);
-    const packSold = parseInt(result.rows[0].count, 10); // Ensure to parse to integer
+    const packSold = parseInt(result.rows[0].count, 10);
+
+    // Query to get total count of all packs
+    const totalResult = await client.query('SELECT COUNT(*) FROM packs');
+    const totalCount = parseInt(totalResult.rows[0].count, 10);
+
     client.release();
-    res.json({ count: packSold });
+
+    // Calculate percentage of sold packs
+    let percentageSold = 0;
+    if (totalCount > 0) {
+      percentageSold = (packSold / totalCount) * 100;
+    }
+
+    res.json({ count: packSold, percentage: percentageSold });
   } catch (error) {
     console.error('Error fetching pack count:', error);
     res.status(500).json({ message: 'Server error' });

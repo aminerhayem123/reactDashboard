@@ -15,6 +15,7 @@ import { cilArrowBottom, cilArrowTop, cilOptions } from '@coreui/icons';
 const WidgetsDropdown = (props) => {
   const [packCount, setPackCount] = useState(null);
   const [packsold, setPacksold] = useState(null);
+  const [percentageSold, setPercentageSold] = useState(null);
 
   useEffect(() => {
     const fetchPackCount = async () => {
@@ -45,6 +46,7 @@ const WidgetsDropdown = (props) => {
         
         const data = await response.json();
         setPacksold(data.count); // Update state with packCount from API
+        setPercentageSold(data.percentage); // Update state with percentageSold from API
       } catch (error) {
         console.error('Error fetching pack count:', error);
         // Handle error, set packCount or show error message
@@ -146,9 +148,9 @@ const WidgetsDropdown = (props) => {
             value={
               packsold != null ? (
                 <>
-                  {packsold}
+                  {packsold} &nbsp;
                   <span className="fs-6 fw-normal ml-4">
-                    (40.9% <CIcon icon={cilArrowTop} />)
+                    ({percentageSold}% <CIcon icon={cilArrowTop} />)
                   </span>
                 </>
               ) : (

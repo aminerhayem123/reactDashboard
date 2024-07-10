@@ -358,7 +358,7 @@ const Packs = () => {
               <CTableRow key={index}>
                 <CTableDataCell>{pack.brand}</CTableDataCell>
                 <PackStatusCell status={pack.status} />
-                <CTableDataCell className="text-center">
+                <CTableDataCell>
                   {pack.items.map((item, idx) => (
                     <div key={idx}>
                       {item.name}
