@@ -9,6 +9,7 @@ import {
 } from '@coreui/react';
 import { getStyle } from '@coreui/utils';
 import { CChartBar, CChartLine } from '@coreui/react-chartjs';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CIcon from '@coreui/icons-react';
 import { cilArrowBottom, cilArrowTop, cilOptions } from '@coreui/icons';
 
@@ -97,7 +98,11 @@ const WidgetsDropdown = (props) => {
               '0'
             )
           }
-          title="Packs"
+          title={
+            <>
+              <i className="fas fa-box"></i> Packs
+            </>
+          }
           action={
             <CDropdown alignment="end">
               <CDropdownToggle color="transparent" caret={false} className="text-white p-0">
@@ -184,7 +189,11 @@ const WidgetsDropdown = (props) => {
                 '0'
               )
             }
-            title="Sold"
+            title={
+              <>
+                <i className="fas fa-dollar-sign mr-2"></i> Sold
+              </>
+            }
             action={
               <CDropdown alignment="end">
                 <CDropdownToggle color="transparent" caret={false} className="text-white p-0">
@@ -270,7 +279,11 @@ const WidgetsDropdown = (props) => {
               '0'
             )
           }
-          title="Incomes"
+          title={
+            <>
+              <i className="fas fa-money-bill-wave" style={{ marginRight: '8px' }}></i> Incomes
+            </>
+          }
           action={
             <CDropdown alignment="end">
               <CDropdownToggle color="transparent" caret={false} className="text-white p-0">

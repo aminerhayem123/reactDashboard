@@ -305,10 +305,9 @@ const Packs = () => {
 
   return (
     <>
-      
       <div className="d-flex justify-content-between align-items-center mb-2">
         <Button variant="primary" onClick={() => setShowForm(true)} className="mb-2">
-          Add Pack
+        <i className="fas fa-box"></i> Add Pack
         </Button>
           <div className="flex-grow-1 ms-3">
             <Form.Control
@@ -376,7 +375,7 @@ const Packs = () => {
                     variant="primary"
                     onClick={() => handleShowImages(pack.images)}
                   >
-                    View Images
+                     <i className="fas fa-image" style={{ marginRight: '8px' }}></i> View Images
                   </Button>
                 </CTableDataCell>
                 <CTableDataCell>{pack.price}</CTableDataCell>
@@ -389,13 +388,13 @@ const Packs = () => {
                       setShowItemForm(true);
                     }}
                   >
-                    Add Item
+                    <i className="fas fa-plus" style={{ marginRight: '8px' }}></i> Add Item
                   </Button>
                   <Button
                     variant="primary"
                     onClick={() => handleSold(pack.id, pack.price)}
                   >
-                    Mark as Sold
+                    <i className="fas fa-dollar-sign" style={{ marginRight: '8px' }}></i>Sold
                   </Button>
                 </CTableDataCell>
               </CTableRow>
