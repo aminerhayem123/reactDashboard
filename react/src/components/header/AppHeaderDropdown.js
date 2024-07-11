@@ -1,4 +1,5 @@
-import React from 'react'
+import React from 'react';
+import { Link } from 'react-router-dom';
 import {
   CAvatar,
   CDropdown,
@@ -7,15 +8,15 @@ import {
   CDropdownItem,
   CDropdownMenu,
   CDropdownToggle,
-} from '@coreui/react'
+} from '@coreui/react';
 import {
   cilLockLocked,
   cilSettings,
   cilUser,
-} from '@coreui/icons'
-import CIcon from '@coreui/icons-react'
+} from '@coreui/icons';
+import CIcon from '@coreui/icons-react';
 
-import avatar8 from './../../assets/images/avatars/8.jpg'
+import avatar8 from './../../assets/images/avatars/8.jpg';
 
 const AppHeaderDropdown = () => {
   return (
@@ -25,23 +26,23 @@ const AppHeaderDropdown = () => {
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
         <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">Account</CDropdownHeader>
-          <CDropdownItem href="#">
-            <CIcon icon={cilUser} className="me-2" />
-            Profile
-          </CDropdownItem>
+        <CDropdownItem as={Link} to="/profile">
+          <CIcon icon={cilUser} className="me-2" />
+          Profile
+        </CDropdownItem>
         <CDropdownHeader className="bg-body-secondary fw-semibold my-2">Settings</CDropdownHeader>
-        <CDropdownItem href="#">
+        <CDropdownItem as={Link} to="/settings">
           <CIcon icon={cilSettings} className="me-2" />
           Settings
         </CDropdownItem>
         <CDropdownDivider />
-        <CDropdownItem href="#">
+        <CDropdownItem as={Link} to="/logout">
           <CIcon icon={cilLockLocked} className="me-2" />
           Logout
         </CDropdownItem>
       </CDropdownMenu>
     </CDropdown>
-  )
-}
+  );
+};
 
-export default AppHeaderDropdown
+export default AppHeaderDropdown;
