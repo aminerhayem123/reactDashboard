@@ -444,14 +444,14 @@ app.get('/transactions/profits', async (req, res) => {
     const totalProfit = parseFloat(profitResult.rows[0].total_profit) || 0;
 
     // Calculate total amount received
-    const amountQuery = 'SELECT SUM(amount) AS total_amount FROM transactions';
-    const amountResult = await client.query(amountQuery);
-    const totalAmount = parseFloat(amountResult.rows[0].total_amount) || 0;
+    const priceQuery = 'SELECT SUM(price) AS totalprice FROM packs';
+    const priceResult = await client.query(priceQuery);
+    const totalprice = parseFloat(priceResult.rows[0].totalprice) || 0;
 
     // Calculate percentage of profits
     let percentageProfit = 0;
-    if (totalAmount > 0) {
-      percentageProfit = (totalProfit / totalAmount) * 100;
+    if (totalprice > 0) {
+      percentageProfit = (totalProfit / totalprice) * 100;
     }
 
     client.release();
