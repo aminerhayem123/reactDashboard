@@ -19,6 +19,12 @@ import CIcon from '@coreui/icons-react';
 import avatar8 from './../../assets/images/avatars/8.jpg';
 
 const AppHeaderDropdown = () => {
+  const handleLogout = () => {
+    // Perform logout actions, e.g., clear local storage, update state
+    localStorage.removeItem('authToken'); // Remove token from localStorage
+    // Redirect or handle other logic as needed after logout
+  };
+
   return (
     <CDropdown variant="nav-item">
       <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
@@ -36,7 +42,7 @@ const AppHeaderDropdown = () => {
           Settings
         </CDropdownItem>
         <CDropdownDivider />
-        <CDropdownItem as={Link} to="/logout">
+        <CDropdownItem onClick={handleLogout} as={Link} to="/login">
           <CIcon icon={cilLockLocked} className="me-2" />
           Logout
         </CDropdownItem>

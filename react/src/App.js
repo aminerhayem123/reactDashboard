@@ -1,39 +1,37 @@
 import React, { useEffect, useState, Suspense } from 'react';
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'; // Change to BrowserRouter
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { CSpinner, useColorModes } from '@coreui/react';
+import { CSpinner } from '@coreui/react';
 import './scss/style.scss';
-import Packs from './views/pages/packs/packs';
-import Items from './views/pages/items/items';
+
 // Containers
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'));
 
 // Pages
 const Login = React.lazy(() => import('./views/pages/login/Login'));
-const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard')); 
 
 const App = () => {
-  const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme');
   const storedTheme = useSelector((state) => state.theme);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(null); // Initially null to indicate loading state
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.href.split('?')[1]);
-    const theme = urlParams.get('theme') && urlParams.get('theme').match(/^[A-Za-z0-9\s]+/)[0];
-    if (theme) {
-      setColorMode(theme);
+    const checkAuthentication = () => {
+      const token = localStorage.getItem('authToken');
+      setIsAuthenticated(!!token); // Update isAuthenticated based on the presence of token
+    };
+
+    checkAuthentication(); // Check authentication status on component mount
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on component mount
+
+  useEffect(() => {
+    // Apply the stored theme when it changes
+    if (storedTheme) {
+      document.body.className = ''; // Reset any existing theme classes
+      document.body.classList.add(storedTheme);
     }
-
-    if (isColorModeSet()) {
-      return;
-    }
-
-    setColorMode(storedTheme);
-
-    // Check if user is authenticated (example: check localStorage for token)
-    const token = localStorage.getItem('authToken');
-    setIsAuthenticated(!!token);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [storedTheme]);
 
   const handleLogin = async (email, password) => {
     try {
@@ -51,8 +49,8 @@ const App = () => {
         return data.message; // Return the error message
       }
 
-      localStorage.setItem('authToken', data.token);
-      setIsAuthenticated(true);
+      localStorage.setItem('authToken', data.token); // Store token in localStorage
+      setIsAuthenticated(true); // Update isAuthenticated state
       return null; // No error message
     } catch (error) {
       console.error('Login error:', error);
@@ -61,43 +59,41 @@ const App = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    setIsAuthenticated(false);
+    localStorage.removeItem('authToken'); // Remove token from localStorage
+    setIsAuthenticated(false); // Update isAuthenticated state
+    window.location.reload(); // Refresh the page
   };
 
   if (isAuthenticated === null) {
     // Handle initial loading state, maybe show a spinner or loading indicator
-    return <div>Loading...</div>;
+    return (
+      <div className="loading-container">
+        <CSpinner color="primary" variant="grow" />
+      </div>
+    );
   }
 
   return (
-    <BrowserRouter> {/* Change to BrowserRouter */}
+    <BrowserRouter>
       <Suspense
         fallback={
-          <div className="pt-3 text-center">
+          <div className="loading-container">
             <CSpinner color="primary" variant="grow" />
           </div>
         }
       >
         <Routes>
-          <Route exact path="/" element={<Navigate to="/login" />} />
-          <Route
-            exact
-            path="/login"
-            name="Login Page"
-            element={<Login handleLogin={handleLogin} />}
-          />
-          <Route
-            path="*"
-            name="Home"
-            element={
-              isAuthenticated ? (
-                <DefaultLayout onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
+          {isAuthenticated ? (
+            <>
+              <Route path="/login" element={<Navigate to="/" />} />
+              <Route path="*" element={<DefaultLayout onLogout={handleLogout} />} />
+            </>
+          ) : (
+            <>
+              <Route path="/login" element={<Login handleLogin={handleLogin} />} />
+              <Route path="*" element={<Navigate to="/login" />} />
+            </>
+          )}
         </Routes>
       </Suspense>
     </BrowserRouter>
