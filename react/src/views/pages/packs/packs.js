@@ -50,7 +50,7 @@ const Packs = () => {
   const [saleAmount, setSaleAmount] = useState('');
   const [selectedPackId, setSelectedPackId] = useState(null);
   const [selectedPackPrice, setSelectedPackPrice] = useState(0);
-
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
     brand: '',
     numberOfItems: 1,
@@ -283,7 +283,10 @@ const Packs = () => {
 
   const handleSaleSubmit = async (e) => {
     e.preventDefault();
-  
+    if (Number(saleAmount) < selectedPackPrice) {
+      setErrorMessage('Amount value should be bigger or equal to price.');
+      return;
+    }
     const profit = saleAmount - selectedPackPrice;
   
     try {
@@ -314,6 +317,16 @@ const handleCloseModal = () => {
   setSelectedPackId(null); // Reset selected pack ID
 };
 
+const handleSaleAmountChange = (e) => {
+  const value = e.target.value;
+
+  if (!isNaN(value) && Number(value) >= 0) {
+    setSaleAmount(value);
+    setErrorMessage(''); // Clear error message on valid input
+  } else {
+    setErrorMessage('Invalid amount entered.'); // Display error for invalid input
+  }
+};
   return (
     <>
       <div className="d-flex justify-content-between align-items-center mb-2">
@@ -590,9 +603,10 @@ const handleCloseModal = () => {
                 type="number"
                 placeholder="Enter amount"
                 value={saleAmount}
-                onChange={(e) => setSaleAmount(e.target.value)}
+                onChange={handleSaleAmountChange}
                 required
               />
+              {errorMessage && <Form.Text className="text-danger">{errorMessage}</Form.Text>}
             </Form.Group>
             <Button variant="primary" type="submit">
               Submit
