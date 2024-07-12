@@ -47,6 +47,8 @@ const AddImageModal = ({ show, onHide, packId, handleShowModal }) => {
   
       console.log('Images uploaded successfully:', response.data);
       onHide(); // Close modal after successful upload
+      // Reload the current page
+      window.location.reload();
     } catch (error) {
       console.error('Error uploading images:', error);
       // Handle error (e.g., show error message to user)
