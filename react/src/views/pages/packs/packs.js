@@ -162,7 +162,7 @@ const Packs = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-  
+      window.location.reload();
       console.log('Pack creation response:', response.data);
       fetchPacks(); // Update pack list
       setShowForm(false); // Hide the form after successful submission
@@ -189,7 +189,7 @@ const Packs = () => {
   
       // Send the POST request to add a new item
       await axios.post(`http://localhost:5000/packs/${newItemData.packId}/items`, { name: newItemData.name });
-      
+      window.location.reload();
       // Refresh the packs list after adding the new item
       fetchPacks();
       
@@ -206,6 +206,7 @@ const Packs = () => {
     try {
       await axios.delete(`http://localhost:5000/items/${itemId}`);
       fetchPacks(); // Refresh the list after deletion
+      window.location.reload();
     } catch (error) {
       console.error('Error deleting item:', error);
     }
@@ -294,7 +295,7 @@ const Packs = () => {
         amount: saleAmount,
         profit: profit,
       });
-  
+      window.location.reload();
       console.log('Sale recorded successfully:', response.data);
   
       // Close the modal after submitting
