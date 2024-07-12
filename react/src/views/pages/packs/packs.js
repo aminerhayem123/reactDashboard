@@ -26,6 +26,7 @@ import { faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useMemo } from 'react';
 import { Trash } from 'react-bootstrap-icons';
+import AddImageModal from './AddImageModal'
 import avatar1 from 'src/assets/images/avatars/1.jpg';
 
 const Packs = () => {
@@ -37,6 +38,7 @@ const Packs = () => {
     };
     return date.toLocaleString(undefined, options);
   };
+  const [showModal, setShowModal] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'ascending' });
   const [packs, setPacks] = useState([]);
@@ -301,7 +303,16 @@ const Packs = () => {
       console.error('Error recording sale:', error);
     }
   };
-  
+
+// Function to handle adding images to a pack
+const handleAddImages = (packId) => {
+  setSelectedPackId(packId); // Set the selected pack ID
+  setShowModal(true); // Show the image modal
+};
+const handleCloseModal = () => {
+  setShowModal(false); // Close the modal
+  setSelectedPackId(null); // Reset selected pack ID
+};
 
   return (
     <>
@@ -396,6 +407,12 @@ const Packs = () => {
                   >
                     <i className="fas fa-dollar-sign" style={{ marginRight: '8px' }}></i>Sold
                   </Button>
+                  <Button
+                    variant="primary"
+                    onClick={() => handleAddImages(pack.id)}
+                  >
+                    <i className="fas fa-image"></i> Add Images
+                  </Button>
                 </CTableDataCell>
               </CTableRow>
             ))}
@@ -403,6 +420,13 @@ const Packs = () => {
         </CTable>
         </CCardBody>
       </CCard>
+      {/* Modal Add Images */}
+
+      <AddImageModal
+        show={showModal}
+        onHide={handleCloseModal}
+        packId={selectedPackId}
+      />
 
       {/* Modal for Images */}
       <Modal show={showImageModal} onHide={handleCloseImageModal}>
