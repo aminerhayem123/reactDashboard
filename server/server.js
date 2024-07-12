@@ -463,6 +463,39 @@ app.get('/transactions/profits', async (req, res) => {
   }
 });
 
+app.post('/packs/:id/images', upload.array('images', 10), async (req, res) => {
+  const { id } = req.params;
+  const images = req.files;
+
+  if (!images || images.length === 0) {
+    return res.status(400).json({ message: 'At least one image file is required' });
+  }
+
+  try {
+    // Check if the pack exists
+    const packQuery = 'SELECT * FROM packs WHERE id = $1';
+    const packResult = await pool.query(packQuery, [id]);
+    const pack = packResult.rows[0];
+
+    if (!pack) {
+      return res.status(404).json({ message: 'Pack not found' });
+    }
+
+    // Insert each image into the database
+    const insertImageQuery = 'INSERT INTO images (pack_id, data) VALUES ($1, $2) RETURNING id';
+    const insertPromises = images.map(async (image) => {
+      const result = await pool.query(insertImageQuery, [id, image.buffer]);
+      return result.rows[0].id;
+    });
+
+    const insertedImageIds = await Promise.all(insertPromises);
+
+    res.json({ message: 'Images added to pack successfully', imageIds: insertedImageIds });
+  } catch (error) {
+    console.error('Error adding images to pack:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
