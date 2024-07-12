@@ -241,7 +241,7 @@ const Packs = () => {
       // Remove selected images from modalImages state
       const updatedImages = modalImages.filter((image) => !selectedImageIds.includes(image.id));
       setModalImages(updatedImages);
-  
+      window.location.reload();
       setSelectedImageIds([]); // Clear selected image IDs after deletion
     } catch (error) {
       console.error('Error deleting images:', error);
