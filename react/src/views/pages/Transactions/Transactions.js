@@ -47,7 +47,7 @@ const Transactions = () => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-  
+      window.location.reload();
       // If deletion is successful, fetch updated transactions
       await fetchTransactions();
     } catch (error) {

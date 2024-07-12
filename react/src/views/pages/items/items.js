@@ -54,6 +54,7 @@ const Items = () => {
       }
       setItems(items.filter(item => item.id !== id));
       setFilteredItems(filteredItems.filter(item => item.id !== id));
+      window.location.reload();
     } catch (error) {
       console.error('Error deleting item:', error);
     }
