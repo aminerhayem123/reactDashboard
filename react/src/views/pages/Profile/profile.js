@@ -55,6 +55,7 @@ const Profile = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+
         },
         body: JSON.stringify({
           email: formData.email,
@@ -66,6 +67,8 @@ const Profile = () => {
         const updatedUser = await response.json();
         setUserData(updatedUser); // Update user data in state
         console.log('User updated successfully:', updatedUser);
+        localStorage.removeItem('authToken'); // Remove token from localStorage
+        window.location.reload(); // Refresh the page
       } else {
         console.error('Failed to update user');
       }
