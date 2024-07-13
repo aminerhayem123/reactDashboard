@@ -35,6 +35,31 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// Update user endpoint
+// Update user endpoint
+app.put('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const { email, password } = req.body;
+
+  try {
+    const client = await pool.connect();
+    const query = 'UPDATE users SET email = $1, password = $2 WHERE id = $3 RETURNING *';
+    const values = [email, password, id];
+    const result = await client.query(query, values);
+    client.release();
+
+    if (result.rowCount > 0) {
+      const updatedUser = result.rows[0];
+      res.json(updatedUser);
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error updating user:', error.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 app.post('/packs', upload.array('images', 10), async (req, res) => {
   const { brand, price } = req.body;
 

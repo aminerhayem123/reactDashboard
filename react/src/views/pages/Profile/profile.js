@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CCard,
   CCardBody,
@@ -14,15 +14,65 @@ const Profile = () => {
   const [userData, setUserData] = useState({
     id: 1,
     name: 'Profile',
-    email: '',
+    email: '', // Initialize email state
     role: 'Admin',
     avatar: avatar, // Example avatar image
   });
 
-  const handleEditClick = () => {
-    // Handle edit button click, e.g., show edit form or navigate to edit page
-    console.log('Edit button clicked');
+  // State for form inputs
+   const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+
+  useEffect(() => {
+    // Fetch initial user data or set default values
+    fetchUserData();
+  }, []);
+
+  // Function to fetch user data (optional)
+  const fetchUserData = () => {
+    // Replace with actual fetch logic if needed
+    setUserData({
+      ...userData,
+      email: 'example@email.com', // Example initial email
+    });
   };
+
+  // Function to handle form input changes
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData({
+      ...formData,
+      [id]: value,
+    });
+  };
+
+  // Function to handle edit button click
+  const handleEditClick = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/users/${userData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+  
+      if (response.ok) {
+        const updatedUser = await response.json();
+        setUserData(updatedUser); // Update user data in state
+        console.log('User updated successfully:', updatedUser);
+      } else {
+        console.error('Failed to update user');
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+    }
+  };  
 
   return (
     <div className="d-flex justify-content-center align-items-center">
@@ -50,6 +100,8 @@ const Profile = () => {
                 className="form-control"
                 id="email"
                 placeholder={userData.email}
+                value={formData.email}
+                onChange={handleInputChange}
               />
             </div>
             <div className="mb-3">
@@ -59,6 +111,8 @@ const Profile = () => {
                 className="form-control"
                 id="password"
                 placeholder="*********" // Example: Display masked password or provide a change option
+                value={formData.password}
+                onChange={handleInputChange}
               />
             </div>
             <div className="d-grid gap-2">
