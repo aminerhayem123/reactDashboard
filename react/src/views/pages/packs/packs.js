@@ -74,6 +74,10 @@ const Packs = ({ hideActions, hideSearch }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const packsPerPage = 10; // Number of packs to display per page
   const [salePassword, setSalePassword] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [packToDelete, setPackToDelete] = useState(null);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
   const [formData, setFormData] = useState({
     brand: '',
     numberOfItems: 1,
@@ -410,6 +414,65 @@ const handlePageClick = (data) => {
 const offset = currentPage * packsPerPage;
 const currentPacks = useMemo(() => filteredPacks.slice(offset, offset + packsPerPage), [filteredPacks, currentPage]);
 
+const handleShowDeleteModal = (pack) => {
+  setPackToDelete(pack);
+  setShowDeleteModal(true);
+};
+
+const handleCloseDeleteModal = () => {
+  setShowDeleteModal(false);
+  setPassword(''); // Clear password when closing
+};
+
+const handlePasswordChange = (e) => setPassword(e.target.value);
+
+
+const handleDelete = async () => {
+  try {
+    if (!password) {
+      console.error('Password is required');
+      return;
+    }
+
+    if (!packToDelete || !packToDelete.id) {
+      console.error('PackToDelete or its ID is undefined');
+      return;
+    }
+
+    const response = await fetch(`http://localhost:5000/packs/${packToDelete.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password }), // Ensure password is included
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        const errorResponse = await response.json();
+        console.error('Authentication failed:', errorResponse.message);
+        // Handle setting password error message if defined
+        // e.g., setPasswordError(errorResponse.message);
+      } else {
+        throw new Error('Network response was not ok');
+      }
+    } else {
+      const result = await response.json();
+      if (result.success) {
+        // Update the UI to reflect the deletion
+        const updatedPacks = packs.filter(p => p.id !== packToDelete.id);
+        setPacks(updatedPacks);
+        setFilteredPacks(updatedPacks);
+        setShowDeleteModal(false);
+      } else {
+        console.error('Error deleting pack:', result.message);
+      }
+    }
+  } catch (error) {
+    console.error('Error deleting pack:', error);
+  }
+};
+
   return (
     <>
     {!hideSearch && (
@@ -514,6 +577,9 @@ const currentPacks = useMemo(() => filteredPacks.slice(offset, offset + packsPer
                         </Dropdown.Item>
                         <Dropdown.Item onClick={() => handleAddImages(pack.id)}>
                           <i className="fas fa-image" style={{ marginRight: '4px' }}></i> Add Images
+                        </Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleShowDeleteModal(pack)}>
+                          <i className="fas fa-trash" style={{ marginRight: '4px' }}></i> Delete
                         </Dropdown.Item>
                       </Dropdown.Menu>
                     </Dropdown>
@@ -748,6 +814,33 @@ const currentPacks = useMemo(() => filteredPacks.slice(offset, offset + packsPer
             {errorMessage && <p className="text-danger">{errorMessage}</p>}
             <Button variant="primary" type="submit">
               Update Pack
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
+      
+      {/* Delete Pack Modal */}
+      <Modal show={showDeleteModal} onHide={handleCloseDeleteModal}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group controlId="formPassword">
+              <Form.Label>Enter Password</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={handlePasswordChange}
+              />
+            </Form.Group>
+            <br></br>
+            {passwordError && (
+                <Form.Control.Feedback type="invalid">{passwordError}</Form.Control.Feedback>
+              )}
+            <Button variant="danger" onClick={handleDelete}>
+              Delete
             </Button>
           </Form>
         </Modal.Body>
