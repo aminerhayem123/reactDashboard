@@ -451,19 +451,20 @@ const handleDelete = async () => {
       if (response.status === 401) {
         const errorResponse = await response.json();
         console.error('Authentication failed:', errorResponse.message);
-        // Handle setting password error message if defined
-        // e.g., setPasswordError(errorResponse.message);
+        setPasswordError(errorResponse.message); // Set the error message here
       } else {
         throw new Error('Network response was not ok');
       }
     } else {
       const result = await response.json();
       if (result.success) {
+        window.location.reload();
         // Update the UI to reflect the deletion
         const updatedPacks = packs.filter(p => p.id !== packToDelete.id);
         setPacks(updatedPacks);
         setFilteredPacks(updatedPacks);
-        setShowDeleteModal(false);
+        setShowDeleteModal(false); // Close the modal on success
+        setPasswordError(''); // Clear the error message on successful delete
       } else {
         console.error('Error deleting pack:', result.message);
       }
@@ -820,31 +821,35 @@ const handleDelete = async () => {
       </Modal>
       
       {/* Delete Pack Modal */}
-      <Modal show={showDeleteModal} onHide={handleCloseDeleteModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Deletion</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group controlId="formPassword">
-              <Form.Label>Enter Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={handlePasswordChange}
-              />
-            </Form.Group>
-            <br></br>
-            {passwordError && (
-                <Form.Control.Feedback type="invalid">{passwordError}</Form.Control.Feedback>
-              )}
-            <Button variant="danger" onClick={handleDelete}>
-              Delete
-            </Button>
-          </Form>
-        </Modal.Body>
-      </Modal>
+          <Modal show={showDeleteModal} onHide={handleCloseDeleteModal}>
+      <Modal.Header closeButton>
+        <Modal.Title>Confirm Deletion</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form>
+          <Form.Group controlId="formPassword">
+            <Form.Label>Enter Password</Form.Label>
+            <Form.Control
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={handlePasswordChange}
+            />
+          </Form.Group>
+          {passwordError && (
+            <div style={{ color: 'red', marginTop: '10px' }}>
+              {passwordError}
+            </div>
+          )}
+          <br />
+          <Button variant="danger" onClick={handleDelete}>
+            Delete
+          </Button>
+        </Form>
+      </Modal.Body>
+    </Modal>
+
+
 
        {/* Modal for marking pack as sold */}
       <Modal show={showSaleModal} onHide={() => setShowSaleModal(false)}>
