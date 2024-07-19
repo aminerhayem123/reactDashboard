@@ -1,0 +1,12 @@
+To-Do:
+
+- Date presentation should like: h/mn - dd/mm 
+- Actions column to dots: add new vew 3 dot (...) option in the action column
+- Pack Modification (all logic)
+
+- Password need to confirm when add a transaction or delete a transaction
+- Item modification (all logic)
+- Cancel transaction with pass also
+
+- Transaction list in the dashboard view 
+- add delete button icon instead of the word 'delete' in items and transactions list

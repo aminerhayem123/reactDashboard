@@ -12,18 +12,22 @@ import {
   CInputGroup,
   CInputGroupText,
   CRow,
+  CImage,
 } from '@coreui/react';
 import CIcon from '@coreui/icons-react';
 import { cilLockLocked, cilUser } from '@coreui/icons';
-
+import loginImage from 'src/assets/images/LoginPackImage.jpg';
+import Loader from 'src/views/pages/loader.js'; 
 const Login = ({ handleLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); // Add loading state
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true); // Start loading
     try {
       const error = await handleLogin(email, password);
       if (error) {
@@ -35,6 +39,8 @@ const Login = ({ handleLogin }) => {
     } catch (error) {
       console.error('Login error:', error);
       setError('Server error');
+    } finally {
+      setLoading(false); // Stop loading
     }
   };
 
@@ -46,61 +52,56 @@ const Login = ({ handleLogin }) => {
             <CCardGroup>
               <CCard className="p-4">
                 <CCardBody>
-                  <CForm onSubmit={handleSubmit}>
-                    <h1>Login</h1>
-                    <p className="text-body-secondary">Sign In to your account</p>
-                    {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
-                    <CInputGroup className="mb-3">
-                      <CInputGroupText>
-                        <CIcon icon={cilUser} />
-                      </CInputGroupText>
-                      <CFormInput
-                        placeholder="Email"
-                        autoComplete="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </CInputGroup>
-                    <CInputGroup className="mb-4">
-                      <CInputGroupText>
-                        <CIcon icon={cilLockLocked} />
-                      </CInputGroupText>
-                      <CFormInput
-                        type="password"
-                        placeholder="Password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                      />
-                    </CInputGroup>
-                    <CRow>
-                      <CCol xs={6}>
-                        <CButton type="submit" color="primary" className="px-4">
-                          Login
-                        </CButton>
-                      </CCol>
-                      <CCol xs={6} className="text-right">
-                        <CButton color="link" className="px-0">
-                          Forgot password?
-                        </CButton>
-                      </CCol>
-                    </CRow>
-                  </CForm>
+                  {loading ? (
+                    <Loader /> // Show loader when loading
+                  ) : (
+                    <CForm onSubmit={handleSubmit}>
+                      <h1>Login</h1>
+                      <p className="text-body-secondary">Sign In to your account</p>
+                      {error && <p style={{ color: 'red', marginBottom: '1rem' }}>{error}</p>}
+                      <CInputGroup className="mb-3">
+                        <CInputGroupText>
+                          <CIcon icon={cilUser} />
+                        </CInputGroupText>
+                        <CFormInput
+                          placeholder="Email"
+                          autoComplete="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </CInputGroup>
+                      <CInputGroup className="mb-4">
+                        <CInputGroupText>
+                          <CIcon icon={cilLockLocked} />
+                        </CInputGroupText>
+                        <CFormInput
+                          type="password"
+                          placeholder="Password"
+                          autoComplete="current-password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                        />
+                      </CInputGroup>
+                      <CRow>
+                        <CCol xs={6}>
+                          <CButton type="submit" color="primary" className="px-4">
+                            Login
+                          </CButton>
+                        </CCol>
+                        <CCol xs={6} className="text-right">
+                          <CButton color="link" className="px-0">
+                            Forgot password?
+                          </CButton>
+                        </CCol>
+                      </CRow>
+                    </CForm>
+                  )}
                 </CCardBody>
               </CCard>
-              <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
+              <CCard className="text-white bg-white py-5" style={{ width: '100%' }}>
                 <CCardBody className="text-center">
-                  <div>
-                    <h2>Sign up</h2>
-                    <p>
-                      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-                      tempor incididunt ut labore et dolore magna aliqua.
-                    </p>
-                    <Link to="/register">
-                      <CButton color="primary" className="mt-3" active tabIndex={-1}>
-                        Register Now!
-                      </CButton>
-                    </Link>
+                  <div className="text-center">
+                    <img src={loginImage} style={{ width: '100%' }} alt="loginImage" />
                   </div>
                 </CCardBody>
               </CCard>

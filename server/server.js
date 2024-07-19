@@ -10,7 +10,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const pool = new Pool({
-  connectionString: 'postgresql://postgres:DcKjrtBiMkDeDMkPqkJujJwwhHVaFvQK@viaduct.proxy.rlwy.net:17470/railway',
+  connectionString: 'postgresql://postgres:atrox123@localhost:5432/app',
 });
 
 const storage = multer.memoryStorage();
@@ -36,7 +36,6 @@ app.post('/login', async (req, res) => {
 });
 
 // Update user endpoint
-// Update user endpoint
 app.put('/api/users/:id', async (req, res) => {
   const { id } = req.params;
   const { email, password } = req.body;
@@ -61,22 +60,13 @@ app.put('/api/users/:id', async (req, res) => {
 });
 
 app.post('/packs', upload.array('images', 10), async (req, res) => {
-  const { brand, price } = req.body;
+  const { brand, price, numberOfItems, category } = req.body;
 
-  // Handle items as either comma-separated string or array
-  let items = req.body.items;
-  if (typeof items === 'string') {
-    items = items.split(',').map(item => item.trim());
-  } else if (!Array.isArray(items)) {
-    items = [];
-  }
-
-  if (!brand || !items.length || !price) {
-    return res.status(400).json({ message: 'Brand, items, and price are required' });
+  if (!brand || !numberOfItems || !price || !category) {
+    return res.status(400).json({ message: 'Brand, number of items, price, and category are required' });
   }
 
   const images = req.files;
-
   const status = 'Not Sold';
 
   try {
@@ -86,24 +76,25 @@ app.post('/packs', upload.array('images', 10), async (req, res) => {
     const randomNumber = Math.floor(10000 + Math.random() * 90000);
     const packId = `${randomLetters}${randomNumber}`;
 
-    const result = await client.query(
-      'INSERT INTO packs (id, brand, price, status) VALUES ($1, $2, $3, $4) RETURNING id, created_date',
-      [packId, brand, parseFloat(price), status]
+    // Insert into packs table
+    const packInsertResult = await client.query(
+      'INSERT INTO packs (id, brand, price, status, number_of_items, category) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_date',
+      [packId, brand, parseFloat(price), status, parseInt(numberOfItems), category]
     );
+    const { id: insertedPackId, created_date } = packInsertResult.rows[0];
 
-    const { id: insertedPackId, created_date } = result.rows[0];
-
-    const itemQueries = items.map((itemName, index) => {
-      const itemId = `${packId}${String(index + 1).padStart(5, '0')}`;
-      return client.query('INSERT INTO items (id, name, pack_id) VALUES ($1, $2, $3)', [itemId, itemName, insertedPackId]);
-    });
-
+    // Insert into items table
+    const itemQueries = [];
+    for (let i = 0; i < numberOfItems; i++) {
+      const itemId = `${packId}${String(i + 1).padStart(5, '0')}`;
+      itemQueries.push(client.query('INSERT INTO items (id, pack_id) VALUES ($1, $2)', [itemId, insertedPackId]));
+    }
     await Promise.all(itemQueries);
 
+    // Insert into images table
     const imageQueries = images.map((image) => {
       return client.query('INSERT INTO images (pack_id, data) VALUES ($1, $2)', [insertedPackId, image.buffer]);
     });
-
     await Promise.all(imageQueries);
 
     client.release();
@@ -144,86 +135,136 @@ app.get('/packs', async (req, res) => {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
   }
-});
+}); 
 
-// Endpoint to add a new item to a pack
-app.post('/packs/:id/items', async (req, res) => {
-  const { id } = req.params;
-  const { name } = req.body;
-
+// Backend endpoint to fetch categories
+app.get('/categories', async (req, res) => {
   try {
     const client = await pool.connect();
-
-    // Get the current number of items for the pack
-    const itemCountQuery = 'SELECT COUNT(*) FROM items WHERE pack_id = $1';
-    const itemCountResult = await client.query(itemCountQuery, [id]);
-    const itemCount = parseInt(itemCountResult.rows[0].count);
-
-    // Generate the item ID using the pack ID and the next available number
-    let newItemId;
-    let foundNewId = false;
-    let i = 1;
-    do {
-      newItemId = `${id}${String(itemCount + i).padStart(5, '0')}`;
-      const checkItemIdQuery = 'SELECT id FROM items WHERE id = $1';
-      const checkItemIdResult = await client.query(checkItemIdQuery, [newItemId]);
-      if (checkItemIdResult.rows.length === 0) {
-        foundNewId = true;
-      }
-      i++;
-    } while (!foundNewId);
-
-    // Insert the item into the database
-    const insertItemQuery = 'INSERT INTO items (id, name, pack_id) VALUES ($1, $2, $3) RETURNING *';
-    const result = await client.query(insertItemQuery, [newItemId, name, id]);
-    const newItem = result.rows[0];
+    
+    // Query to fetch distinct categories from packs table
+    const categoriesResult = await client.query('SELECT DISTINCT category FROM packs');
+    const categories = categoriesResult.rows.map(row => row.category);
 
     client.release();
-
-    res.status(201).json(newItem);
+    res.json(categories);
   } catch (err) {
-    console.error('Error adding item:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-
-
-app.delete('/items/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const client = await pool.connect();
-
-    // Get pack_id for cascading deletion
-    const packIdQuery = 'SELECT pack_id FROM items WHERE id = $1';
-    const packIdResult = await client.query(packIdQuery, [id]);
-    const packId = packIdResult.rows[0].pack_id;
-
-    // Delete the item
-    await client.query('DELETE FROM items WHERE id = $1', [id]);
-
-    // Check if the pack has any remaining items
-    const itemCountQuery = 'SELECT COUNT(*) FROM items WHERE pack_id = $1';
-    const itemCountResult = await client.query(itemCountQuery, [packId]);
-    const remainingItemCount = parseInt(itemCountResult.rows[0].count);
-
-    // If no items remain in the pack, delete the pack
-    if (remainingItemCount === 0) {
-      // Delete associated images due to ON DELETE CASCADE
-      await client.query('DELETE FROM images WHERE pack_id = $1', [packId]);
-      await client.query('DELETE FROM transactions WHERE pack_id = $1', [packId]);
-      // Delete the pack itself
-      await client.query('DELETE FROM packs WHERE id = $1', [packId]);
-    }
-
-    client.release();
-    res.json({ message: 'Item deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting item:', error);
+    console.error('Error fetching categories:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+// Endpoint to update pack details
+app.put('/packs/:id', async (req, res) => {
+  const { id } = req.params;
+  const { brand, category, number_of_items, price } = req.body;
+
+  if (!brand || !number_of_items || !price || !category) {
+    return res.status(400).json({ message: 'Brand, number of items, price, and category are required' });
+  }
+
+  const newNumberOfItems = parseInt(number_of_items, 10);
+  const newPrice = parseFloat(price);
+
+  try {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // Fetch current pack details
+      const packQuery = 'SELECT status, number_of_items FROM packs WHERE id = $1';
+      const packResult = await client.query(packQuery, [id]);
+      const pack = packResult.rows[0];
+
+      if (!pack) {
+        await client.query('ROLLBACK');
+        res.status(404).json({ error: 'Pack not found' });
+        return;
+      }
+
+      // Check if the pack status is 'Sold' and validate the price
+      if (pack.status === 'Sold') {
+        const transactionQuery = 'SELECT amount FROM Transactions WHERE pack_id = $1';
+        const transactionResult = await client.query(transactionQuery, [id]);
+        const transaction = transactionResult.rows[0];
+
+        if (!transaction) {
+          await client.query('ROLLBACK');
+          res.status(400).json({ error: 'No transaction found for the pack' });
+          return;
+        }
+
+        const amount = parseFloat(transaction.amount);
+
+        if (newPrice >= amount) {
+          await client.query('ROLLBACK');
+          res.status(400).json({ error: 'Price must be smaller than the amount in transactions' });
+          return;
+        }
+      }
+
+      // Fetch existing item IDs
+      const existingItemsQuery = 'SELECT id FROM items WHERE pack_id = $1';
+      const existingItemsResult = await client.query(existingItemsQuery, [id]);
+      const existingItemIds = existingItemsResult.rows.map(row => row.id);
+
+      // Determine the number of items to add or remove
+      const currentNumberOfItems = pack.number_of_items;
+      const difference = newNumberOfItems - currentNumberOfItems;
+
+      if (difference > 0) {
+        // Add new items
+        const itemQueries = [];
+        for (let i = 0; i < difference; i++) {
+          const newItemId = `${id}${String(currentNumberOfItems + i + 1).padStart(5, '0')}`;
+          // Only add item if it doesn't already exist
+          if (!existingItemIds.includes(newItemId)) {
+            itemQueries.push(client.query('INSERT INTO items (id, pack_id) VALUES ($1, $2)', [newItemId, id]));
+          }
+        }
+        await Promise.all(itemQueries);
+      } else if (difference < 0) {
+        // Remove items
+        const itemsToRemove = -difference;
+        // Make sure to remove the correct items
+        await client.query(`
+          DELETE FROM items
+          WHERE pack_id = $1
+          AND id IN (
+            SELECT id
+            FROM items
+            WHERE pack_id = $1
+            ORDER BY id
+            LIMIT $2
+          )
+        `, [id, itemsToRemove]);
+      }
+
+      // Update the pack details
+      const updatePackQuery = `
+        UPDATE packs
+        SET brand = $1, category = $2, number_of_items = $3, price = $4, created_date = NOW()
+        WHERE id = $5
+        RETURNING *
+      `;
+      const result = await client.query(updatePackQuery, [brand, category, newNumberOfItems, newPrice, id]);
+      const updatedPack = result.rows[0];
+
+      await client.query('COMMIT');
+      res.status(200).json(updatedPack);
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error updating pack:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    } finally {
+      client.release();
+    }
+  } catch (err) {
+    console.error('Error connecting to the database:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 app.get('/items', async (req, res) => {
   try {
@@ -237,40 +278,6 @@ app.get('/items', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-app.delete('/items/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const client = await pool.connect();
-
-    // Get pack_id and position of the item being deleted
-    const packIdQuery = 'SELECT pack_id FROM items WHERE id = $1';
-    const packIdResult = await client.query(packIdQuery, [id]);
-    const packId = packIdResult.rows[0].pack_id;
-
-    // Delete the item
-    await client.query('DELETE FROM items WHERE id = $1', [id]);
-
-    // Fetch all remaining items in the pack and update their IDs sequentially
-    const fetchItemsQuery = 'SELECT id FROM items WHERE pack_id = $1 ORDER BY id';
-    const fetchItemsResult = await client.query(fetchItemsQuery, [packId]);
-    const items = fetchItemsResult.rows;
-
-    // Update items in a batch to ensure sequential IDs
-    for (let i = 0; i < items.length; i++) {
-      const newId = `${packId}${String(i + 1).padStart(5, '0')}`;
-      await client.query('UPDATE items SET id = $1 WHERE id = $2', [newId, items[i].id]);
-    }
-
-    client.release();
-
-    res.json({ message: 'Item deleted successfully', remainingItems: items.length });
-  } catch (error) {
-    console.error('Error deleting item:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 
 app.delete('/images/delete', async (req, res) => {
   const { imageIds } = req.body;
@@ -299,18 +306,31 @@ app.get('/items/search', (req, res) => {
     res.status(400).json({ message: 'Search query parameter "q" is required' });
     return;
   }
+
   const filteredItems = items.filter(item =>
-    item.name.toLowerCase().includes(q.toLowerCase()) ||
-    item.id.toString().toLowerCase().includes(q.toLowerCase())
+    item.id.toString().toLowerCase().includes(q.toLowerCase()) ||
+    item.pack_id.toString().toLowerCase().includes(q.toLowerCase())
   );
+
   res.json(filteredItems);
 });
 
 app.post('/packs/:id/sold', async (req, res) => {
   const { id } = req.params;
+  const { amount, password } = req.body; // Extract amount and password from request body
 
   try {
     const client = await pool.connect();
+
+    // Authenticate the user based on password
+    const userQuery = 'SELECT * FROM users WHERE password = $1';
+    const userResult = await client.query(userQuery, [password]);
+    const user = userResult.rows[0];
+
+    if (!user) {
+      client.release();
+      return res.status(401).json({ message: 'Incorrect password. Access denied.' });
+    }
 
     // Fetch pack details
     const packQuery = 'SELECT * FROM packs WHERE id = $1';
@@ -322,16 +342,14 @@ app.post('/packs/:id/sold', async (req, res) => {
       return res.status(404).json({ message: 'Pack not found' });
     }
 
-    // Calculate profit (assuming profit is amount received - pack price)
-    const { price } = pack;
-    const { amount } = req.body;
-
     // Validate 'amount' to ensure it's a valid number
-    if (!parseFloat(amount)) {
+    if (isNaN(parseFloat(amount))) {
       client.release();
       return res.status(400).json({ message: 'Invalid amount' });
     }
 
+    // Calculate profit (assuming profit is amount received - pack price)
+    const { price } = pack;
     const profit = parseFloat(amount) - parseFloat(price);
 
     // Insert transaction into database
@@ -356,11 +374,18 @@ app.post('/packs/:id/sold', async (req, res) => {
   }
 });
 
-// Endpoint to fetch transactions
+// Endpoint to fetch transactions along with pack details
 app.get('/transactions', async (req, res) => {
   try {
     const client = await pool.connect();
-    const result = await client.query('SELECT id, pack_id, sale_date, amount, profit FROM transactions');
+    
+    // Query to fetch transactions and join with packs to get category
+    const result = await client.query(`
+      SELECT t.id, t.pack_id, t.sale_date, t.amount, t.profit, p.category
+      FROM transactions t
+      JOIN packs p ON t.pack_id = p.id
+    `);
+    
     client.release();
     res.json(result.rows);
   } catch (error) {
@@ -371,9 +396,20 @@ app.get('/transactions', async (req, res) => {
 
 app.delete('/transactions/:id', async (req, res) => {
   const { id } = req.params;
+  const { password } = req.body; // Extract password from request body
 
   try {
     const client = await pool.connect();
+
+    // Authenticate the user based on password
+    const userQuery = 'SELECT * FROM users WHERE password = $1';
+    const userResult = await client.query(userQuery, [password]);
+    const user = userResult.rows[0];
+
+    if (!user) {
+      client.release();
+      return res.status(401).json({ message: 'Incorrect password. Access denied.' });
+    }
 
     // Fetch transaction details to find the pack_id
     const transactionQuery = 'SELECT * FROM transactions WHERE id = $1';
@@ -411,7 +447,7 @@ app.delete('/transactions/:id', async (req, res) => {
 
     client.release();
 
-    res.json({ message: 'Transaction deleted successfully' });
+    res.json({ success: true, message: 'Transaction deleted successfully' });
   } catch (error) {
     console.error('Error deleting transaction:', error);
     res.status(500).json({ message: 'Server error' });
@@ -519,6 +555,112 @@ app.post('/packs/:id/images', upload.array('images', 10), async (req, res) => {
   } catch (error) {
     console.error('Error adding images to pack:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Endpoint to get statistics
+app.get('/stats', async (req, res) => {
+  try {
+    const client = await pool.connect();
+
+    // Query 1: Total Number of Items
+    const totalItemsResult = await client.query('SELECT COUNT(*) AS total_items FROM items');
+    const totalItems = totalItemsResult.rows[0].total_items;
+
+    // Query 2: Number of Items in Each Category
+    const itemsByCategoryResult = await client.query(`
+      SELECT packs.category, COUNT(items.id) AS number_of_items
+      FROM items
+      JOIN packs ON items.pack_id = packs.id
+      GROUP BY packs.category
+      ORDER BY packs.category
+    `);
+
+    // Query 3: Number of Packs Sold
+    const packsSoldResult = await client.query('SELECT COUNT(*) AS total_packs_sold FROM transactions');
+    const totalPacksSold = packsSoldResult.rows[0].total_packs_sold;
+
+    // Query 4: Total Profit and Total Expenses
+    const totalsResult = await client.query(`
+      SELECT 
+        SUM(profit) AS total_profit,
+        (SELECT SUM(price) FROM packs) AS total_expenses
+      FROM transactions
+    `);
+    const { total_profit: totalProfit, total_expenses: totalExpenses } = totalsResult.rows[0];
+
+    // Query 5: Percentage of Profit from Expenses
+    const profitPercentage = totalExpenses ? (totalProfit / totalExpenses) * 100 : 0;
+
+    // Query 6: Profit and Expenses for Current Month
+    const monthlyDataResult = await client.query(`
+      SELECT 
+        SUM(profit) AS monthly_profit,
+        (SELECT SUM(price) FROM packs WHERE created_date >= date_trunc('month', current_date)) AS monthly_expenses
+      FROM transactions
+      WHERE sale_date >= date_trunc('month', current_date)
+    `);
+    const { monthly_profit: monthlyProfit, monthly_expenses: monthlyExpenses } = monthlyDataResult.rows[0];
+    const monthlyProfitPercentage = monthlyExpenses ? (monthlyProfit / monthlyExpenses) * 100 : 0;
+
+    // Query 7: Profit and Expenses for Current Year
+    const yearlyDataResult = await client.query(`
+      SELECT 
+        SUM(profit) AS yearly_profit,
+        (SELECT SUM(price) FROM packs WHERE created_date >= date_trunc('year', current_date)) AS yearly_expenses
+      FROM transactions
+      WHERE sale_date >= date_trunc('year', current_date)
+    `);
+    const { yearly_profit: yearlyProfit, yearly_expenses: yearlyExpenses } = yearlyDataResult.rows[0];
+    const yearlyProfitPercentage = yearlyExpenses ? (yearlyProfit / yearlyExpenses) * 100 : 0;
+
+    // Query 8: Number of Packs Sold per Category
+    const packsSoldByCategoryResult = await client.query(`
+      SELECT packs.category, COUNT(transactions.id) AS packs_sold
+      FROM transactions
+      JOIN packs ON transactions.pack_id = packs.id
+      GROUP BY packs.category
+      ORDER BY packs.category
+    `);
+
+    // Query 9: Profit per Category
+    const profitByCategoryResult = await client.query(`
+      SELECT packs.category, SUM(transactions.profit) AS category_profit
+      FROM transactions
+      JOIN packs ON transactions.pack_id = packs.id
+      GROUP BY packs.category
+      ORDER BY packs.category
+    `);
+
+    // Combine data for items by category with packs sold and profit
+    const itemsByCategory = itemsByCategoryResult.rows.map(item => {
+      const packsSold = packsSoldByCategoryResult.rows.find(pack => pack.category === item.category)?.packs_sold || 0;
+      const categoryProfit = profitByCategoryResult.rows.find(profit => profit.category === item.category)?.category_profit || 0;
+      return {
+        ...item,
+        packs_sold: packsSold,
+        category_profit: categoryProfit,
+      };
+    });
+
+    // Response
+    res.json({
+      totalItems,
+      itemsByCategory,
+      totalPacksSold,
+      totalProfit,
+      totalExpenses,
+      profitPercentage,
+      monthlyProfit,
+      monthlyExpenses,
+      monthlyProfitPercentage,
+      yearlyProfit,
+      yearlyExpenses,
+      yearlyProfitPercentage,
+    });
+  } catch (error) {
+    console.error('Error fetching statistics:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

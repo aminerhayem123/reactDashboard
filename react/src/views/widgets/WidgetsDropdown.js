@@ -1,18 +1,24 @@
 import React, { useEffect, useRef , useState } from 'react';
 import PropTypes from 'prop-types';
+import axios from 'axios';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 import {
   CRow,
   CCol,
   CDropdown,
   CDropdownToggle,
   CWidgetStatsA,
+  CDropdownMenu,
+  CDropdownItem,
 } from '@coreui/react';
 import { getStyle } from '@coreui/utils';
 import { CChartBar, CChartLine } from '@coreui/react-chartjs';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CIcon from '@coreui/icons-react';
+import { faChartPie } from '@fortawesome/free-solid-svg-icons';
 import { cilArrowBottom, cilArrowTop, cilOptions } from '@coreui/icons';
-
+import { FaChartBar } from 'react-icons/fa';
 const WidgetsDropdown = (props) => {
   const [packCount, setPackCount] = useState(null);
   const [packsold, setPacksold] = useState(null);
@@ -84,6 +90,138 @@ const WidgetsDropdown = (props) => {
     return parseFloat(percentage).toFixed(3);
   };
 
+// Function to generate and download PDF
+const generatePDF = async () => {
+  try {
+    // Fetch statistics from the API
+    const response = await axios.get('http://localhost:5000/stats');
+    const stats = response.data;
+
+    // Get current date
+    const currentDate = new Date().toLocaleDateString();
+
+    // Create a container for the content
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.width = '210mm'; // A4 width in mm
+    pdfContainer.style.padding = '20mm'; // Add padding
+    pdfContainer.style.boxSizing = 'border-box';
+    pdfContainer.style.fontFamily = 'Arial, sans-serif';
+
+    // Style for tables
+    const tableStyle = `
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    `;
+    
+    const thStyle = `
+      border: 1px solid #000;
+      padding: 8px;
+      background-color: #f2f2f2;
+    `;
+    
+    const tdStyle = `
+      border: 1px solid #000;
+      padding: 8px;
+    `;
+
+    // Add current date
+    pdfContainer.innerHTML += `
+      <h2>Statistics Report</h2>
+      <p>Date: ${currentDate}</p>
+      <hr/>
+    `;
+
+    // Generate the first table for statistics
+    pdfContainer.innerHTML += `
+      <h3>Total Statistics</h3>
+      <table style="${tableStyle}">
+        <thead>
+          <tr>
+            <th style="${thStyle}">Metric</th>
+            <th style="${thStyle}">Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="${tdStyle}">Total Packs Sold</td><td style="${tdStyle}">${stats.totalPacksSold}</td></tr>
+          <tr><td style="${tdStyle}">Total Number of Items</td><td style="${tdStyle}">${stats.totalItems}</td></tr>
+          <tr><td style="${tdStyle}">Total Profit</td><td style="${tdStyle}">${stats.totalProfit}</td></tr>
+          <tr><td style="${tdStyle}">Total Expenses</td><td style="${tdStyle}">${stats.totalExpenses}</td></tr>
+          <tr><td style="${tdStyle}">Percentage of Profit from Expenses</td><td style="${tdStyle}">${stats.profitPercentage.toFixed(2)}%</td></tr>
+          <tr><td style="${tdStyle}">Profit This Month</td><td style="${tdStyle}">${stats.monthlyProfit}</td></tr>
+          <tr><td style="${tdStyle}">Profit This Year</td><td style="${tdStyle}">${stats.yearlyProfit}</td></tr>
+          <tr><td style="${tdStyle}">Percentage of Profit This Month</td><td style="${tdStyle}">${stats.monthlyProfitPercentage.toFixed(2)}%</td></tr>
+          <tr><td style="${tdStyle}">Percentage of Profit This Year</td><td style="${tdStyle}">${stats.yearlyProfitPercentage.toFixed(2)}%</td></tr>
+          <tr><td style="${tdStyle}">Expenses This Month</td><td style="${tdStyle}">${stats.monthlyExpenses}</td></tr>
+          <tr><td style="${tdStyle}">Expenses This Year</td><td style="${tdStyle}">${stats.yearlyExpenses}</td></tr>
+        </tbody>
+      </table>
+    `;
+
+    // Generate the second table for items by category
+    pdfContainer.innerHTML += `
+      <h3>Number of Items in Each Category</h3>
+      <table style="${tableStyle}">
+        <thead>
+          <tr>
+            <th style="${thStyle}">Category</th>
+            <th style="${thStyle}">Number of Items</th>
+            <th style="${thStyle}">Packs Sold</th>
+            <th style="${thStyle}">Profit</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${stats.itemsByCategory.map(item => `
+            <tr>
+              <td style="${tdStyle}">${item.category}</td>
+              <td style="${tdStyle}">${item.number_of_items}</td>
+              <td style="${tdStyle}">${item.packs_sold}</td>
+              <td style="${tdStyle}">${item.category_profit}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    // Append the container to the body
+    document.body.appendChild(pdfContainer);
+
+    // Wait for the content to be rendered
+    setTimeout(() => {
+      html2canvas(pdfContainer, { useCORS: true, scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF({
+          orientation: 'p', // Portrait
+          unit: 'mm', // Units in mm
+          format: 'a4', // A4 paper format
+        });
+
+        const imgWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+
+        let position = 0;
+
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        pdf.save('statistics_report.pdf');
+        pdfContainer.remove();
+      });
+    }, 1000);
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+  }
+};
+  
   return (
     <CRow className={props.className} xs={{ gutter: 4 }}>
       <CCol sm={6} xl={4} xxl={3}>
@@ -343,18 +481,25 @@ const WidgetsDropdown = (props) => {
           color="danger"
           value={
             <>
-              44K{' '}
+              {' '}
               <span className="fs-6 fw-normal">
-                (-23.6% <CIcon icon={cilArrowBottom} />)
+              <FontAwesomeIcon icon={faChartPie} />
               </span>
             </>
           }
-          title="Sessions"
+          title={
+          <>
+          <FaChartBar /> Full Stats
+          </>
+          }
           action={
             <CDropdown alignment="end">
               <CDropdownToggle color="transparent" caret={false} className="text-white p-0">
                 <CIcon icon={cilOptions} />
               </CDropdownToggle>
+              <CDropdownMenu>
+              <CDropdownItem onClick={generatePDF}>Download Stats as PDF</CDropdownItem>
+              </CDropdownMenu>
             </CDropdown>
           }
           chart={

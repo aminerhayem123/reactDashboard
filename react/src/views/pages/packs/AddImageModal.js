@@ -84,6 +84,7 @@ const AddImageModal = ({ show, onHide, packId, handleShowModal }) => {
               }
             </div>
           </Form.Group>
+          <br></br>
           <Button variant="primary" type="submit" disabled={images.length === 0}>
             Save
           </Button>

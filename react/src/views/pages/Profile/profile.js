@@ -8,7 +8,7 @@ import {
 import CIcon from '@coreui/icons-react';
 import { cilUser } from '@coreui/icons';
 
-import avatar from 'src/assets/images/avatars/1.jpg';
+import avatar from 'src/assets/images/avatars/10.png';
 
 const Profile = () => {
   const [userData, setUserData] = useState({

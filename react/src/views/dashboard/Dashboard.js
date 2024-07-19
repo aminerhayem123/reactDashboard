@@ -15,7 +15,9 @@ import { faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import WidgetsDropdown from '../widgets/WidgetsDropdown';
 import PackStatusCell from '../pages/packs/PackStatusCell'; // Adjust the path as per your folder structure
-
+import Transactions from '../pages/Transactions/Transactions'; // Adjust the path as per your folder structure
+import pack from '../pages/packs/packs';
+import Packs from '../pages/packs/packs';
 const Dashboard = ({ handleLogout }) => {
   const [packs, setPacks] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'ascending' });
@@ -79,55 +81,10 @@ const Dashboard = ({ handleLogout }) => {
   return (
     <>
       <WidgetsDropdown className="mb-4" />
-      <CCard className="mb-4">
-      <CCardHeader>Packs</CCardHeader>
-        <CCardBody>
-          <CTable align="middle" className="mb-0 border" hover responsive>
-            <CTableHead className="text-nowrap">
-              <CTableRow>
-                <CTableHeaderCell className="bg-body-tertiary">Brand</CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary">Items</CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary" onClick={() => handleSort('price')}>
-                  Price
-                  {sortConfig.key === 'price' && (
-                    <FontAwesomeIcon
-                      icon={sortConfig.direction === 'ascending' ? faSortUp : faSortDown}
-                      className="ms-2"
-                    />
-                  )}
-                </CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary" onClick={() => handleSort('date')}>
-                  Date
-                  {sortConfig.key === 'date' && (
-                    <FontAwesomeIcon
-                      icon={sortConfig.direction === 'ascending' ? faSortUp : faSortDown}
-                      className="ms-2"
-                    />
-                  )}
-                </CTableHeaderCell>
-                <CTableHeaderCell className="bg-body-tertiary">Status</CTableHeaderCell>
-              </CTableRow>
-            </CTableHead>
-            <CTableBody>
-              {sortedPacks.map((pack, index) => (
-                <CTableRow key={index}>
-                  <CTableDataCell>{pack.brand}</CTableDataCell>
-                  <CTableDataCell >
-                    {pack.items.map((item, idx) => (
-                      <div key={idx}>{item.name}</div>
-                    ))}
-                  </CTableDataCell>
-                  <CTableDataCell>{pack.price}</CTableDataCell>
-                  <CTableDataCell>{formatDate(new Date(pack.created_date))}</CTableDataCell>
-                  <PackStatusCell status={pack.status} />
-                </CTableRow>
-              ))}
-            </CTableBody>
-          </CTable>
-        </CCardBody>
-      </CCard>
-
-      
+      {/* Transactions Table */}
+      <Packs hideActions={true} hideSearch={true} />
+      {/* Transactions Table */}
+      <Transactions hideActions={true} hideSearch={true} />
     </>
   );
 };
