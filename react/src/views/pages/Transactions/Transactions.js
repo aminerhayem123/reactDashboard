@@ -237,6 +237,7 @@ const handlePrintWithPack = (transaction, pack) => {
       <CCardHeader>Transactions</CCardHeader>
       <CCardBody>
         {!hideSearch && (
+          <Form onSubmit={(e) => e.preventDefault()}>
           <CInputGroup className="mb-3">
             <input
               type="text"
@@ -244,8 +245,10 @@ const handlePrintWithPack = (transaction, pack) => {
               placeholder="Search by Sale Date, Amount, or Profit"
               value={searchQuery}
               onChange={handleSearchChange}
+              onFocus={() => setShowModal(false)} // Add this line
             />
           </CInputGroup>
+        </Form>        
         )}
         <CTable align="middle" className="mb-0 border" hover responsive>
           <CTableHead className="text-nowrap">
@@ -324,7 +327,7 @@ const handlePrintWithPack = (transaction, pack) => {
             <Form.Group controlId="password">
               <Form.Label>Password</Form.Label>
               <Form.Control
-                type="text"
+                type="password"
                 placeholder="Enter your password"
                 value={password}
                 onChange={handlePasswordChange}
