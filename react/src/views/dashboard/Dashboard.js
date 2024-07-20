@@ -11,15 +11,18 @@ import {
   CCardHeader
 } from '@coreui/react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
+import { faSortUp, faSortDown,faArrowLeft,faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import WidgetsDropdown from '../widgets/WidgetsDropdown';
 import Transactions from '../pages/Transactions/Transactions'; // Adjust the path as per your folder structure
+import ReactPaginate from 'react-paginate'; // Import ReactPaginate
 
 const Dashboard = ({ handleLogout }) => {
   const [packs, setPacks] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'ascending' });
   const [aggregatedPacks, setAggregatedPacks] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0); // Add state for pagination
+  const itemsPerPage = 10; // Number of items per page
 
   useEffect(() => {
     fetchPacks();
@@ -48,9 +51,7 @@ const Dashboard = ({ handleLogout }) => {
         const response = await axios.get('http://localhost:5000/aggregated-packs');
         setAggregatedPacks(response.data);
       } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
+        console.error('Error fetching aggregated packs:', error);
       }
     };
 
@@ -58,7 +59,7 @@ const Dashboard = ({ handleLogout }) => {
   }, []);
 
   const sortedPacks = useMemo(() => {
-    const sortablePacks = [...packs];
+    const sortablePacks = [...aggregatedPacks];
     if (sortConfig.key === 'price') {
       sortablePacks.sort((a, b) => (sortConfig.direction === 'ascending' ? a.price - b.price : b.price - a.price));
     } else if (sortConfig.key === 'date') {
@@ -69,7 +70,7 @@ const Dashboard = ({ handleLogout }) => {
       });
     }
     return sortablePacks;
-  }, [packs, sortConfig]);
+  }, [aggregatedPacks, sortConfig]);
 
   const formatDate = (date) => {
     const options = {
@@ -80,14 +81,13 @@ const Dashboard = ({ handleLogout }) => {
     return date.toLocaleString(undefined, options);
   };
 
-  const handleViewImage = (images) => {
-    setModalImages(images);
-    setModalVisible(true);
-  };
-  
-  const closeModal = () => {
-    setModalVisible(false);
-    setModalImages([]); // Ensure to clear images when closing
+  // Pagination Logic
+  const offset = currentPage * itemsPerPage;
+  const currentPacks = sortedPacks.slice(offset, offset + itemsPerPage);
+  const pageCount = Math.ceil(sortedPacks.length / itemsPerPage);
+
+  const handlePageClick = ({ selected }) => {
+    setCurrentPage(selected);
   };
 
   return (
@@ -96,29 +96,56 @@ const Dashboard = ({ handleLogout }) => {
       <CCard className="mb-4">
         <CCardHeader>Packs</CCardHeader>
         <CCardBody>
-        <CTable align="middle" className="mb-0 border" hover responsive>
-          <CTableHead className="text-nowrap">
-          <CTableRow>
-            <CTableHeaderCell className="bg-body-tertiary">Category</CTableHeaderCell>
-            <CTableHeaderCell className="bg-body-tertiary">Number of Packs</CTableHeaderCell>
-            <CTableHeaderCell className="bg-body-tertiary">Number of Items</CTableHeaderCell>
-            <CTableHeaderCell className="bg-body-tertiary">Packs Sold</CTableHeaderCell>
-            <CTableHeaderCell className="bg-body-tertiary">Total Price</CTableHeaderCell>
-          </CTableRow>
-        </CTableHead>
-        <CTableBody>
-          {aggregatedPacks.map((pack, index) => (
-            <CTableRow key={index}>
-              <CTableDataCell>{pack.category}</CTableDataCell>
-              <CTableDataCell>{pack.number_of_packs}</CTableDataCell>
-              <CTableDataCell>{pack.number_of_items}</CTableDataCell>
-              <CTableDataCell>{pack.packs_sold}</CTableDataCell>
-              <CTableDataCell>{pack.total_price}</CTableDataCell>
-            </CTableRow>
-          ))}
-        </CTableBody>
-      </CTable>
-      </CCardBody>
+          <CTable align="middle" className="mb-0 border" hover responsive>
+            <CTableHead className="text-nowrap">
+              <CTableRow>
+                <CTableHeaderCell className="bg-body-tertiary" onClick={() => handleSort('category')}>
+                  Category
+                </CTableHeaderCell>
+                <CTableHeaderCell className="bg-body-tertiary" onClick={() => handleSort('number_of_packs')}>
+                  Number of Packs
+                </CTableHeaderCell>
+                <CTableHeaderCell className="bg-body-tertiary" onClick={() => handleSort('number_of_items')}>
+                  Number of Items
+                </CTableHeaderCell>
+                <CTableHeaderCell className="bg-body-tertiary" onClick={() => handleSort('packs_sold')}>
+                  Packs Sold
+                </CTableHeaderCell>
+                <CTableHeaderCell className="bg-body-tertiary" onClick={() => handleSort('total_price')}>
+                  Total Price
+                </CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {currentPacks.map((pack, index) => (
+                <CTableRow key={index}>
+                  <CTableDataCell>{pack.category}</CTableDataCell>
+                  <CTableDataCell>{pack.number_of_packs}</CTableDataCell>
+                  <CTableDataCell>{pack.number_of_items}</CTableDataCell>
+                  <CTableDataCell>{pack.packs_sold}</CTableDataCell>
+                  <CTableDataCell>{pack.total_price}</CTableDataCell>
+                </CTableRow>
+              ))}
+            </CTableBody>
+          </CTable>
+
+          {/* Pagination aligned to the right */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '15px' }}>
+            <ReactPaginate
+              previousLabel={<FontAwesomeIcon icon={faArrowLeft} />}
+              nextLabel={<FontAwesomeIcon icon={faArrowRight} />}
+              breakLabel={'...'}
+              breakClassName={'break-me'}
+              pageCount={pageCount}
+              marginPagesDisplayed={2}
+              pageRangeDisplayed={5}
+              onPageChange={handlePageClick}
+              containerClassName={'pagination'}
+              subContainerClassName={'pages pagination'}
+              activeClassName={'active'}
+            />
+          </div>
+        </CCardBody>
       </CCard>
       {/* Transactions Table */}
       <Transactions hideActions={true} hideSearch={true} />
