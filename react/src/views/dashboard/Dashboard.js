@@ -14,15 +14,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import WidgetsDropdown from '../widgets/WidgetsDropdown';
-import PackStatusCell from '../pages/packs/PackStatusCell'; // Adjust the path as per your folder structure
 import Transactions from '../pages/Transactions/Transactions'; // Adjust the path as per your folder structure
-import pack from '../pages/packs/packs';
-import Packs from '../pages/packs/packs';
+
 const Dashboard = ({ handleLogout }) => {
   const [packs, setPacks] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: 'price', direction: 'ascending' });
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalImages, setModalImages] = useState([]);
+  const [aggregatedPacks, setAggregatedPacks] = useState([]);
 
   useEffect(() => {
     fetchPacks();
@@ -44,6 +41,21 @@ const Dashboard = ({ handleLogout }) => {
     }
     setSortConfig({ key, direction });
   };
+
+  useEffect(() => {
+    const fetchAggregatedPacks = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/aggregated-packs');
+        setAggregatedPacks(response.data);
+      } catch (error) {
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAggregatedPacks();
+  }, []);
 
   const sortedPacks = useMemo(() => {
     const sortablePacks = [...packs];
@@ -81,8 +93,33 @@ const Dashboard = ({ handleLogout }) => {
   return (
     <>
       <WidgetsDropdown className="mb-4" />
-      {/* Transactions Table */}
-      <Packs hideActions={true} hideSearch={true} />
+      <CCard className="mb-4">
+        <CCardHeader>Packs</CCardHeader>
+        <CCardBody>
+        <CTable align="middle" className="mb-0 border" hover responsive>
+          <CTableHead className="text-nowrap">
+          <CTableRow>
+            <CTableHeaderCell className="bg-body-tertiary">Category</CTableHeaderCell>
+            <CTableHeaderCell className="bg-body-tertiary">Number of Packs</CTableHeaderCell>
+            <CTableHeaderCell className="bg-body-tertiary">Number of Items</CTableHeaderCell>
+            <CTableHeaderCell className="bg-body-tertiary">Packs Sold</CTableHeaderCell>
+            <CTableHeaderCell className="bg-body-tertiary">Total Price</CTableHeaderCell>
+          </CTableRow>
+        </CTableHead>
+        <CTableBody>
+          {aggregatedPacks.map((pack, index) => (
+            <CTableRow key={index}>
+              <CTableDataCell>{pack.category}</CTableDataCell>
+              <CTableDataCell>{pack.number_of_packs}</CTableDataCell>
+              <CTableDataCell>{pack.number_of_items}</CTableDataCell>
+              <CTableDataCell>{pack.packs_sold}</CTableDataCell>
+              <CTableDataCell>{pack.total_price}</CTableDataCell>
+            </CTableRow>
+          ))}
+        </CTableBody>
+      </CTable>
+      </CCardBody>
+      </CCard>
       {/* Transactions Table */}
       <Transactions hideActions={true} hideSearch={true} />
     </>
